@@ -1,0 +1,82 @@
+---
+- hosts: databases
+  become: yes
+  var_files:
+    - ../config.yaml
+
+  tasks:
+    - name: install postgresql
+      package:
+        name: ['postgresql', 'postgresql-server-dev-all']
+        state: present
+    - name: Enable local socket auth with password/md5
+      postgresql_pg_hba:
+        dest: "{{ item }}"
+        contype: local
+        users: all
+        databases: all
+        method: md5
+      with_items:
+        - "/etc/postgresql/12/main/pg_hba.conf"
+        # - "/etc/postgresql/10/main/pg_hba.conf"
+        # - "/etc/postgresql/11/main/pg_hba.conf"
+        # - "/etc/postgresql/9.5/main/pg_hba.conf"
+    - name: enable postgresql
+      service:
+        name: postgresql
+        state: restarted
+        enabled: true
+
+    - name: install mysql
+      package:
+        name: ['mysql-server', 'libmysqlclient-dev']
+        state: present
+    - name: Install MySQL-python for Ansible
+      package:
+        name: ['python3-pymysql', 'python3-mysqldb']
+        state: present
+    - name: enable mysql
+      service:
+        name: mysql
+        state: started
+        enabled: true
+    - name: Set root user password
+      mysql_user:
+        host: "{{ item }}"
+        name: root
+        password: "{{ db.mysql.root_password }}"
+        check_implicit_admin: yes
+        state: present
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        # login_password="{{ mysql_old_root_password }}"
+      with_items:
+        - '::1'
+        - '127.0.0.1'
+        - 'localhost'
+      ignore_errors: yes
+    - name: Removes all anonymous user accounts
+      mysql_user:
+        name: ''
+        host_all: yes
+        state: absent
+        login_user: root
+        login_password: "{{ db.mysql.root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+    - name: test database is absent
+      mysql_db:
+        name: test
+        state: absent
+        login_user: root
+        login_password: "{{ db.mysql.root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: install redis
+      package:
+        name: redis-server
+        state: present
+    - name: enable redis
+      service:
+        name: redis
+        state: started
+        enabled: true

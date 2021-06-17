@@ -1,0 +1,39 @@
+[uwsgi]
+project = {{ app.project.name }}
+base  = {{ app.project.src_dir }}
+
+chdir = %(base)
+home = %(chdir)/.venv
+
+module = {{ app.django.project_module }}.wsgi:application
+
+env = DJANGO_SETTINGS_MODULE={{ app.django.project_module }}.settings
+
+master = true
+# set cheaper algorithm to use, if not set default will be used
+cheaper-algo = spare
+# minimum number of workers to keep at all times
+cheaper = 2
+# number of workers to spawn at startup
+cheaper-initial = 2
+# maximum number of workers that can be spawned
+workers = 5
+# how many workers should be spawned at a time
+cheaper-step = 1
+
+socket = /run/uwsgi/%(project).sock
+chown-socket = www-data:www-data
+chmod-socket = 660
+vaccum = true
+
+plugins = python3
+
+safe-pidfile = /run/uwsgi/%(project)-master.pid
+# respawn processes taking more than 20 seconds
+harakiri = 20
+# limit the project to 128 MB
+#limit-as = 128
+# respawn processes after serving 5000 requests
+max-requests = 5000
+# background the process & log
+daemonize = /var/log/uwsgi/%(project).log

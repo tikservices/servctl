@@ -1,0 +1,107 @@
+---
+- hosts: all
+  become: true
+  var_files:
+    - ../config.yaml
+
+  tasks:
+    - name: Ensure the locale exists
+      locale_gen:
+        name: en_US.UTF-8
+        state: present
+    - name: set as default locale
+      command: localectl set-locale LANG=en_US.UTF-8
+
+    - name: setup base utils
+      package:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - zsh
+          - zsh-syntax-highlighting
+          - vim
+          - tmux
+          - wget
+          - curl
+          - htop
+          - zip
+          - software-properties-common
+          - rsync
+          - git
+          # - git-lfs
+
+    - name: setup net utils
+      package:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - msmtp
+          - msmtp-mta
+          - bsd-mailx
+
+    - name: config msmtp
+      ansible.builtin.copy:
+        src: ../secrets/msmtprc
+        dest: /etc/msmtprc
+        owner: root
+        group: root
+        mode: 0444
+
+    - name: create msmtp log file
+      file:
+        path: /var/log/msmtp.log
+        state: touch
+        owner: root
+        group: root
+        mode: 0622
+
+    - name: config email aliases
+      ansible.builtin.copy:
+        src: ../secrets/aliases
+        dest: /etc/aliases
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: config host
+      ansible.builtin.copy:
+        src: ../template/etc/host.conf
+        dest: /etc/host.conf
+
+    - name: add default scripts
+      ansible.builtin.copy:
+        src: ../template/scripts/
+        dest: /usr/local/bin/
+        mode: 0555
+
+    - name: Set zsh as default shell
+      user:
+        name: "{{ sysadmin.username }}"
+        shell: /usr/bin/zsh
+
+    - name: add global dotfiles
+      ansible.builtin.copy:
+        src: "../template/etc/{{ item }}"
+        dest: "/etc/apt/{{ item }}"
+      with_items:
+        - gitconfig
+        - zsh
+
+
+    - name: source zsh dotfiles
+      lineinfile:
+        path: /etc/zsh/zshrc
+        create: yes
+        state: present
+        line: 'for r in /etc/zsh/*.zsh; do source $r; done'
+
+    - name: zshrc
+      lineinfile:
+        path: "/home/{{ sysadmin.username }}/.zshrc"
+        create: yes
+        state: present
+        line: '#'
+      tags:
+        - zshrc

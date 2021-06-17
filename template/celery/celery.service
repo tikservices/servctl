@@ -1,0 +1,11 @@
+[Unit]
+Description=Celery service for managing all Celery clusters
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecReload=/bin/true
+RemainAfterExit=on
+
+[Install]
+WantedBy=multi-user.target

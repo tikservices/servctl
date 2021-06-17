@@ -1,0 +1,3 @@
+d /var/run/gunicorn 0755 www-data www-data -
+d /run/gunicorn 0755 www-data www-data -
+d /var/log/gunicorn 0755 www-data www-data -

@@ -1,0 +1,77 @@
+# vim: ft=yaml
+dirs:
+  local:
+    # Local directory to store app config
+    apps: apps
+    # local directory where templates are stores
+    template: template
+    # local directory where to store backups
+    backups: backups
+  server:
+    # Remote abslute path where to deploy apps
+    apps: "/apps/"
+    apps_data: "/data/apps/"
+
+github:
+  # access tokento Github API
+  access_token:
+  # webhook secret to use to send push notication and to be checked by the webhook script against unauthorized requests
+  webhook_secret:
+  # account where private repos are hosted
+  username:
+
+db:
+  mysql:
+    # mysql password for root user
+    root_password:
+  postgres:
+    # postgresql password for root user
+    root_password:
+
+# OVH API access keys to create dns records and email forwading
+ovh:
+  endpoint: ovh-eu
+  application_key:
+  application_secret:
+  consumer_key:
+
+django:
+  superuser:
+    # username to use for the superuser created by the script
+    username:
+    # email to use for the superuser created by the script
+    email:
+    # plain text password to use for the superuser created by the script
+    password:
+
+# Webmaster of web apps
+webmaster:
+  full_name:
+  # webmaster email where to sent ssl expiration notifications
+  email:
+
+# datadog account to use to collect matrix
+datadog:
+  api_key:
+
+# server sysadmin user account, will be created by ansible playbook
+sysadmin:
+  username:
+  password:
+  full_name:
+
+ssh:
+  # ssh private key passphrase, or you can use SSH Agent
+  passphrase: null
+  # Password to use to do username/password auth. Note: username is set at sysadmin.username
+  password: null
+  # config_path:  # set a different path to ssh config file
+
+# colorize_errors: True
+shell:
+   dry: False
+   echo: True
+   pty: False
+   warn: False
+   shell: "/bin/bash"
+   env: {}

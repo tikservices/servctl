@@ -1,0 +1,8 @@
+fabric.yaml
+config.yaml
+servctl.yaml
+ovh.ini
+/apps/
+/ansible/hosts.ini
+/zones/
+/secrets/

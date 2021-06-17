@@ -1,0 +1,20 @@
+[Unit]
+Description=Celery Beat Service %i
+ConditionPathExists=/etc/celery/%i.conf
+PartOf=celerybeat.service
+ReloadPropagatedFrom=celerybeat.service
+Before=celerybeat.service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+EnvironmentFile=/etc/celery/%i.conf
+WorkingDirectory=/apps/%i/src/
+ExecStart=/bin/sh -c '${CELERY_BIN} \
+    --workdir="${CELERYD_CHDIR}" -A ${CELERY_APP} beat \
+    --pidfile="${CELERYBEAT_PID_FILE}" \
+    --logfile="${CELERYBEAT_LOG_FILE}" --loglevel="${CELERYD_LOG_LEVEL}"'
+[Install]
+WantedBy=multi-user.target

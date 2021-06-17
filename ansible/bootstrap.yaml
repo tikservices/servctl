@@ -1,0 +1,83 @@
+---
+- hosts: all
+  become: true
+  var_files:
+    - ../config.yaml
+
+  tasks:
+    - name: upgrade packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: add user group
+      group:
+        # gid: 113
+        name: admin
+        state: present
+    - name: add admin user
+      user:
+        name: "{{ sysadmin.username }}"
+        password: "{{ sysadmin.password  | password_hash('sha512') }}"
+        comment: System Administrator
+        shell: /bin/bash
+        append: yes
+        group: admin
+        update_password: on_create
+        state: present
+
+        generate_ssh_key: yes
+        ssh_key_type: ed25519
+        ssh_key_passphrase: "{{ connect_kwargs.passphrase }}"
+
+    - name: add admin user to www-data group
+      user:
+        name: "{{ sysadmin.username }}"
+        group: www-data
+        append: true
+
+    - name: sudoers
+      ansible.builtin.template:
+        src: ../template/etc/sudoers.jinja2
+        dest: /etc/sudoers
+        validate: /usr/sbin/visudo -cf %s
+        owner: root
+        group: root
+        mode: 0440
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: Change root password
+      user:
+        name: root
+        password: "{{ sysadmin.password  | password_hash('sha512') }}"
+        shell: /bin/bash
+
+    - name: ssh-copy-id
+      authorized_key:
+        user: "{{ sysadmin.username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+      tags:
+        - copy_host_ssh_id
+
+    - name: set timezone to UTC
+      timezone:
+        name: UTC
+
+    - name: config sshd
+      ansible.builtin.template:
+        src: ../template/etc/ssh/sshd_config.jinja2
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: 0600
+        validate: /usr/sbin/sshd -t -f %s
+        backup: yes
+    - name: generate ed25519 host key
+      command: ssh-keygen -q -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -C "" -N ""
+      args:
+        creates: /etc/ssh/ssh_host_ed25519_key
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted

@@ -1,0 +1,11 @@
+[Unit]
+Description=Gunicorn service for managing all instances
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecReload=/bin/true
+RemainAfterExit=on
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,198 @@
+---
+- hosts: web
+  become: yes
+  tasks:
+    - name: install nginx
+      package:
+        name: nginx
+        state: present
+    - name: Remove default nginx config
+      file: name=/etc/nginx/sites-enabled/default state=absent
+    - name: config nginx
+      copy:
+        src: "{{ item }}"
+        dest: /etc/nginx/
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - ../template/nginx/nginx.conf
+        - ../template/nginx/mime.types
+        - ../template/nginx/conf.server.d
+        - ../template/nginx/conf.d
+        - ../template/nginx/errors
+        - ../template/nginx/htpasswd
+    - name: reconfig default nginx configs
+      copy:
+        src: "../template/nginx/sites-available/{{ item }}"
+        dest: "/etc/nginx/sites-available/{{ item }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - redirect-https
+        - redirect-no-www
+        # - no-default
+    - name: reenable default nginx configs
+      file:
+        src: "/etc/nginx/sites-available/{{ item }}"
+        dest: "/etc/nginx/sites-enabled/{{ item }}"
+        owner: root
+        group: root
+        mode: 0644
+        state: link
+      with_items:
+        - redirect-https
+        - redirect-no-www
+        # - no-default
+    - name: check nginx
+      command: nginx -t
+    - name: enable nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: true
+
+    # - name: add certbot repo
+    #   apt_repository:
+    #     repo: ppa:certbot/certbot
+    - name: install certbot
+      package:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - certbot
+          - python3-certbot-nginx
+          - python3-certbot-dns-ovh
+    - name: enable certbot auto renewal
+      service:
+        name: certbot
+        enabled: true
+
+
+    # - name: install php-fpm
+    #   package:
+    #     name: php7.4-fpm
+    #     state: present
+    # - name: enable php-fpm
+    #   service:
+    #     name: php7.4-fpm
+    #     state: started
+    #     enabled: true
+
+    # - name: install uwsgi
+    #   package:
+    #     name: "{{ packages }}"
+    #   vars:
+    #     packages:
+    #       - uwsgi
+    #       - uwsgi-emperor
+    #       - uwsgi-plugin-python3
+    # - name: enable uwsgi
+    #   service:
+    #     name: "{{ item }}"
+    #     state: started
+    #     enabled: true
+    #   with_items:
+    #     - uwsgi
+    #     - uwsgi-emperor
+
+    # - name: install supervisor
+    #   package:
+    #     name: supervisor
+    # - name: enable supervisor
+    #   service:
+    #     name: supervisor
+    #     state: started
+    #     # enabled: true
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0750'
+      with_items:
+        - /var/www/
+        - "{{ dirs.server.apps }}"
+        - "{{ dirs.server.apps_data }}"
+
+
+    - name: Fix www ownership
+      file:
+        path: "{{ item }}"
+        owner: www-data
+        group: www-data
+      with_items:
+        - /var/www/
+        - "{{ dirs.server.apps }}"
+        - "{{ dirs.server.apps_data }}"
+
+    - name: create SSH certificat directories
+      file:
+        path: /var/www/.ssh
+        state: directory
+        mode: 0700
+        owner: www-data
+        group: www-data
+    - name: add Github public key
+      known_hosts:
+        path: /var/www/.ssh/known_hosts
+        name: github.com
+        key: "{{ item }}"
+      with_items:
+        - 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=='
+    - name: Fix ssh known_hosts ownership
+      file:
+        path: /var/www/.ssh/known_hosts
+        mode: 0600
+        owner: www-data
+        group: www-data
+
+    - name: Celery - Create Dir
+      file:
+        path: /etc/celery/
+        state: directory
+        mode: 0755
+        owner: www-data
+        group: www-data
+    - name: Celery - Sync Services & Tmpfiles
+      copy:
+        src: "../template/celery/{{ item.name }}"
+        dest: "{{ item.dst }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - { name: 'celery.service', dst: '/etc/systemd/system/' }
+        - { name: 'celerybeat.service', dst: '/etc/systemd/system/' }
+        - { name: 'celery@.service', dst: '/etc/systemd/system/' }
+        - { name: 'celerybeat@.service', dst: '/etc/systemd/system/' }
+        - { name: 'celery.tmpfiles', dst: '/etc/tmpfiles.d/celery.conf' }
+
+    - name: Gunicorn - Create Dir
+      file:
+        path: /etc/gunicorn/
+        state: directory
+        mode: 0755
+        owner: www-data
+        group: www-data
+    - name: Gunicorn - Sync Services & Tmpfiles
+      copy:
+        src: "../template/gunicorn/{{ item.name }}"
+        dest: "{{ item.dst }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+        - { name: 'gunicorn.service', dst: '/etc/systemd/system/' }
+        - { name: 'gunicorn@.service', dst: '/etc/systemd/system/' }
+        - { name: 'gunicorn@.socket', dst: '/etc/systemd/system/' }
+        - { name: 'gunicorn.tmpfiles', dst: '/etc/tmpfiles.d/gunicorn.conf' }
+
+    - name: System daemon-reload
+      systemd:
+        daemon_reload: yes
+    - name: System tmpfiles create
+      command: systemd-tmpfiles --create

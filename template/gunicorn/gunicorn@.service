@@ -1,0 +1,51 @@
+[Unit]
+Description=Gunicorn daemon %i
+ConditionPathExists=/etc/gunicorn/%i.conf
+Requires=gunicorn@%i.socket
+After=network.target
+PartOf=gunicorn.service
+ReloadPropagatedFrom=gunicorn.service
+Before=gunicorn.service
+# After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+EnvironmentFile=/etc/gunicorn/%i.conf
+# another option for an even more restricted service is
+# DynamicUser=yes
+# see http://0pointer.net/blog/dynamic-users-with-systemd.html
+
+RuntimeDirectory=gunicorn/%i
+LogsDirectory=gunicorn/%i
+WorkingDirectory=/apps/%i/src/
+ExecStart=/bin/sh -c '${GUNICORN_BIN} \
+    --workers ${WORKERS} --bind unix:/run/gunicorn/%i/sock -m 007 ${WSGI_APP} \
+    --name=gunicorn:%i \
+    --access-logfile=${GUNICORN_ACCESS_FILE} \
+    --error-logfile=${GUNICORN_ERROR_FILE} \
+    --log-level=${GUNICORN_LOG_LEVEL} --capture-output \
+    --worker-tmp-dir=/run/gunicorn/%i \
+    --chdir="${GUNICORN_CHDIR}" ${GUNICORN_CMD_ARGS}'
+ExecReload=/bin/kill -s HUP $MAINPID
+TimeoutStopSec=5
+
+# Isolation & Security
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=yes
+ProtectDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+# DynamicUser=yes
+
+NotifyAccess=all
+KillMode=mixed
+Restart=on-failure
+
+
+[Install]
+WantedBy=multi-user.target

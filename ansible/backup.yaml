@@ -1,0 +1,42 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: setup backup utils
+      package:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - rclone
+          - restic
+
+    - name: config rclone
+      copy:
+        src: ../secrets/backup/rclone.conf
+        dest: /etc/rclone.conf
+        owner: root
+        group: root
+        mode: 0400
+
+    - name: config restic
+      copy:
+        src: ../secrets/backup/backup.sh
+        dest: /usr/local/bin/backup.sh
+        owner: root
+        group: root
+        mode: 0500
+
+    - name: config backup cron
+      copy:
+        src: ../secrets/backup/restic.cron
+        dest: /etc/cron.d/restic
+        owner: root
+        group: root
+        mode: 0444
+
+    - name: init backup repo
+      shell: /usr/local/bin/backup.sh init
+      args:
+        executable: /bin/bash
+        creates: /var/cache/restic.init

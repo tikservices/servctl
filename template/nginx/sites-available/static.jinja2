@@ -1,0 +1,82 @@
+# vim: ft=nginx
+server {
+	index index.html index.htm;
+
+	server_name {{ app.domain }};
+	{% for domain in app.domains -%}
+	server_name {{ domain }};
+	{% endfor %}
+
+	charset           utf-8;
+	sendfile             on;
+	sendfile_max_chunk   1m;
+	tcp_nopush        on;
+	tcp_nodelay       on;
+	keepalive_timeout 70;
+
+	location /admin/ {
+		deny all;
+	}
+
+	location / {
+		root {{ app.project.www_dir }}/;
+		try_files $uri $uri.html $uri/index.html /200.html =404;
+	}
+	location /res/ {
+		root {{ app.project.www_dir }}/;
+		expires $expires_max;
+	}
+	location /static/ {
+		root {{ app.project.www_dir }}/;
+		expires $expires_max;
+	}
+
+	include /etc/nginx/conf.server.d/common-locations.conf;
+
+	{% if with_certificates %}
+	listen 443 ssl http2; # managed by Certbot
+	listen [::]:443 ssl http2; # managed by Certbot
+	ssl_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/{{ app.project.name }}/privkey.pem; # managed by Certbot
+	ssl_trusted_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem;
+	include /etc/nginx/conf.server.d/common-ssl.conf;
+	{% else %}
+	listen 80;
+	listen [::]:80;
+	{% endif %}
+
+	include /etc/nginx/conf.server.d/common-headers.conf;
+
+	expires $expires;
+
+	include /etc/nginx/conf.server.d/error-page.conf;
+
+	access_log /var/log/nginx/{{ app.project.name }}.access.log;
+	error_log /var/log/nginx/{{ app.project.name }}.error.log;
+
+	location = /favicon.ico { access_log off; log_not_found off; }
+}
+
+server {
+	server_name www.{{ app.domain }};
+	{% for domain in app.domains -%}
+	{% if not domain.startswith('*') -%}
+	server_name www.{{ domain }};
+	{%- endif %}
+	{% endfor %}
+
+
+	return 301 $scheme://{{ app.domain }}$request_uri;
+
+	{% if with_certificates %}
+	listen 443 ssl http2; # managed by Certbot
+	listen [::]:443 ssl http2; # managed by Certbot
+	ssl_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/{{ app.project.name }}/privkey.pem; # managed by Certbot
+	ssl_trusted_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem;
+	include /etc/nginx/conf.server.d/common-ssl.conf;
+	{% else %}
+	listen 80;
+	listen [::]:80;
+	{% endif %}
+}

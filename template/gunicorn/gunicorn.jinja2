@@ -1,0 +1,14 @@
+DJANGO_SETTINGS_MODULE="{{ app.django.project_module }}.settings"
+WSGI_APP="{{ app.django.project_module }}.wsgi:application"
+
+ENV_PYTHON="{{ app.project.src_dir }}/.venv/bin/python"
+GUNICORN_BIN="{{ app.project.src_dir }}/.venv/bin/gunicorn"
+GUNICORN_CHDIR="{{ app.project.src_dir }}/"
+
+GUNICORN_ACCESS_FILE="/var/log/gunicorn/{{ app.project.name }}/access.log"
+GUNICORN_ERROR_FILE="/var/log/gunicorn/{{ app.project.name }}/error.log"
+GUNICORN_LOG_LEVEL="INFO"
+
+WORKERS=5
+
+GUNICORN_CMD_ARGS="--max-requests=500000 --timeout=60 --keep-alive=60"

@@ -1,0 +1,112 @@
+# vim: ft=nginx
+upstream {{ app.project.name }}-django {
+	{% if app.wsgi.type == 'uwsgi' %}
+	server unix:/run/uwsgi/{{ app.project.name }}.sock;
+	{% elif app.wsgi.type == 'gunicorn' %}
+	server unix:/run/gunicorn/{{ app.project.name }}/sock fail_timeout=0;
+	{% endif %}
+}
+
+server {
+	server_name {{ app.domain }};
+	{% for domain in app.domains -%}
+	server_name {{ domain }};
+	{% endfor %}
+
+	autoindex off;
+	charset           utf-8;
+	tcp_nopush        on;
+	tcp_nodelay       on;
+	keepalive_timeout 70;
+
+	root {{ app.project.www_dir }}/;
+
+	location / {
+		index index.html index.htm;
+		try_files $uri $uri.html $uri/ @django;
+		sendfile           on;
+		include /etc/nginx/conf.server.d/common-headers.conf;
+		expires $expires_max;
+	}
+
+	{% if app.wsgi.type == 'uwsgi' %}
+	location @django {
+		include uwsgi_params;
+		uwsgi_pass {{ app.project.name }}-django;
+
+		uwsgi_param Host $host;
+		uwsgi_param X-Real-IP $remote_addr;
+		uwsgi_param X-Forwarded-For $proxy_add_x_forwarded_for;
+		uwsgi_param X-Forwarded-Proto $http_x_forwarded_proto;
+	}
+	{% elif app.wsgi.type == 'gunicorn' %}
+	location @django {
+		include proxy_params;
+
+		proxy_redirect off;
+		proxy_pass http://tik-crm-saas-api-django;
+	}
+	{% endif %}
+
+	location /static/ {
+		include /etc/nginx/conf.server.d/common-headers.conf;
+		expires $expires_max;
+	}
+
+	location /upload/ {
+		include /etc/nginx/conf.server.d/common-headers.conf;
+		expires $expires_max;
+	}
+
+	{% if app.django.admin_path != 'admin' %}
+	location /admin/ {
+		deny all;
+	}
+	{% endif -%}
+
+	include /etc/nginx/conf.server.d/common-locations.conf;
+
+	{% if with_certificates %}
+	listen 443 ssl http2; # managed by Certbot
+	listen [::]:443 ssl http2; # managed by Certbot
+	ssl_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/{{ app.project.name }}/privkey.pem; # managed by Certbot
+	ssl_trusted_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem;
+	include /etc/nginx/conf.server.d/common-ssl.conf;
+	{% else %}
+	listen 80;
+	listen [::]:80;
+	{% endif %}
+
+	# include /etc/nginx/conf.server.d/common-headers.conf;
+
+	include /etc/nginx/conf.server.d/error-page.conf;
+
+	access_log /var/log/nginx/{{ app.project.name }}.access.log;
+	error_log /var/log/nginx/{{ app.project.name }}.error.log;
+
+	location = /favicon.ico { access_log off; log_not_found off; }
+}
+
+server {
+	server_name www.{{ app.domain }};
+	{% for domain in app.domains -%}
+	{% if not domain.startswith('*') -%}
+	server_name www.{{ domain }};
+	{%- endif %}
+	{% endfor %}
+
+	return 301 $scheme://{{ app.domain }}$request_uri;
+
+	{% if with_certificates %}
+	listen 443 ssl http2; # managed by Certbot
+	listen [::]:443 ssl http2; # managed by Certbot
+	ssl_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/{{ app.project.name }}/privkey.pem; # managed by Certbot
+	ssl_trusted_certificate /etc/letsencrypt/live/{{ app.project.name }}/fullchain.pem;
+	include /etc/nginx/conf.server.d/common-ssl.conf;
+	{% else %}
+	listen 80;
+	listen [::]:80;
+	{% endif %}
+}

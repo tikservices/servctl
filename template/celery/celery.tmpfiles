@@ -1,0 +1,3 @@
+d /var/run/celery 0755 www-data www-data -
+d /run/celery 0755 www-data www-data -
+d /var/log/celery 0755 www-data www-data -

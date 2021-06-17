@@ -1,0 +1,11 @@
+[Unit]
+Description=Celerybeat service for managing all Celerybeat clusters
+
+[Service]
+Type=oneshot
+ExecStart=/bin/true
+ExecReload=/bin/true
+RemainAfterExit=on
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,106 @@
+# vim: set filetype=dosini:
+
+DJANGO_DEBUG={{ app.project.DEBUG }}
+DJANGO_SECURE=true
+DJANGO_SECRET_KEY='{{ app.django.secret }}'
+DJANGO_ALLOWED_HOSTS='{{ app.domains | join(',')  | replace('*', '') }}'
+
+SAAS_VALID_TENANT_TOP_DOMAINS=
+SAAS_VALID_TENANT_DOMAIN_EXTENSIONS=
+
+DJANGO_ADMINS="{{ conf.webmaster.full_name }} <{{ conf.webmaster.email }}>"
+DJANGO_ADMIN_PATH='{{ app.django.admin_path }}'
+DJANGO_PUBLIC_ADMIN_PATH='{{ app.django.admin_path }}'
+
+VAR_DIR={{app.project.var_slink}}
+WWW_DIR={{app.project.www_dir}}
+TMP_DIR={{app.project.tmp_dir}}
+SRC_DIR={{app.project.src_dir}}
+
+{% if driver == 'sqlite' %}
+DATABASE_URL=sqlite:///{{app.project.var_dir}}/db.sqlite3
+{% elif driver == 'mysql' %}
+DATABASE_URL=mysql://{{app.db_name}}:{{app.db.password}}@127.0.0.1/{{app.db_name}}
+{% else %}
+DATABASE_URL=postgres://{{app.db_name}}:{{app.db.password}}@127.0.0.1/{{app.db_name}}
+{% endif %}
+CACHE_URL=locmemcache://?max_entries=1000
+REDIS_CACHE_URL=rediscache://127.0.0.1:6379/1?client_class=django_redis.client.DefaultClient
+REDIS_URL=redis://127.0.0.1:6379/1
+
+EMAIL_URL=
+DJANGO_DEFAULT_FROM_EMAIL=
+DJANGO_SERVER_EMAIL=
+
+DJANGO_EMAIL_BACKEND=anymail.backends.sendgrid.EmailBackend
+SENDGRID_API_KEY=
+
+ANYMAIL_WEBHOOK_SECRET=
+
+DATADOG_TRACE='{{ app.project.name }}'
+DD_API_KEY={{ conf.datadog.api_key }}
+SENTRY_DSN=
+
+DELIVERY_SHIPPER_COUNTRY='TN'
+DELIVERY_SHIPPER_STATE=
+DELIVERY_SHIPPER_ADDRESS=
+DELIVERY_SHIPPER_FULL_NAME=
+DELIVERY_SHIPPER_PHONE=
+DELIVERY_SHIPPER_CELL=
+DELIVERY_SHIPPER_EMAIL=
+DELIVERY_SHIPPER_POST_CODE=
+DELIVERY_SHIPPER_COMPANY_NAME=
+
+DELIVERY_ARAMEX_USERNAME=
+DELIVERY_ARAMEX_PASSWORD=
+DELIVERY_ARAMEX_ACCOUNT_NUMBER=
+DELIVERY_ARAMEX_ACCOUNT_PIN=
+DELIVERY_ARAMEX_ACCOUNT_ENTITY='TUN'
+DELIVERY_ARAMEX_ACCOUNT_COUNTRY_CODE='TN'
+DELIVERY_ARAMEX_DEV=false
+
+# GOOGLE_ANALYTICS_ID='UA-xxxxxxx-x'
+PIWIK_DOMAIN_PATH='p.tik.website/p'
+# PIWIK_SITE_ID=17
+
+APP_NAMESPACE=
+APP_SHORT_NAME='TIK'
+APP_FULL_NAME='TIK Admin'
+APP_FULL_URL='https://{{ app.domain }}/'
+
+HTTP_PROTOCOL=https
+HTTP_PORT=
+
+CLICTOPAY_LOGIN=
+CLICTOPAY_PASSWORD=
+CLICTOPAY_TEST=true
+
+CURRENCIES=TND,EUR,USD
+DEFAULT_CURRENCY=TND
+
+DEFAULT_TAX_RATIO=0.19
+
+LANGUAGE_CODE='en-us'
+TIME_ZONE='Africa/Tunis'
+
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE=
+GOOGLE_DRIVE_STORAGE_SERVICE_EMAIL=
+
+BIGBLUEBUTTON_URL=
+BIGBLUEBUTTON_SECRET=
+
+MEETING_FREE_WEBINAR_ATTENDEES_LIMIT=3
+MEETING_FREE_WEBINAR_DURATION_LIMIT=45
+MEETING_JOIN_START_AT_DURATION_LIMIT=30
+
+# LMS_MAX_COURSES=50
+# MEETING_MAX_WEBINARS=10
+
+OVH_APPLICATION_KEY={{ conf.ovh.application_key }}
+OVH_APPLICATION_SECRET={{ conf.ovh.application_secret }}
+OVH_CONSUMER_KEY={{ conf.ovh.customer_key }}
+OVH_ENDPOINT=ovh-eu
+OVH_BACKEND_TARGET_CNAME=
+OVH_FRONTEND_TARGET_CNAME=
+
+FIXER_ACCESS_KEY=

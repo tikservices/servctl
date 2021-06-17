@@ -1,0 +1,16 @@
+# vim: ft=nginx
+
+server {
+	listen 443 ssl http2 default_server;
+	listen [::]:443 ssl http2 default_server;
+
+	server_name "";
+	server_name _;
+
+	ssl_certificate /etc/letsencrypt/live/tik.tn/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/tik.tn/privkey.pem; # managed by Certbot
+	ssl_trusted_certificate /etc/letsencrypt/live/tik.tn/fullchain.pem;
+	include /etc/nginx/conf.server.d/common-ssl.conf;
+
+	return 444;
+}
