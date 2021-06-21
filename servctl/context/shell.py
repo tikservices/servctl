@@ -1,4 +1,4 @@
-from fabfile.context.app import App
+from .app import App
 from pathlib import Path
 from typing import Literal, Optional, Union
 from fabric.connection import Connection
@@ -75,11 +75,12 @@ class Shell:
         cmd = f"rm -rf {p}"
         self.sudo(cmd)
 
-    def put(self, src_l: Union[Path, str], dst_r: Union[Path, str]) -> None:
-        self.con.put(str(src_l), str(dst_r))
+    def put(self, src_l: Union[Path, str], dst_r: Union[Path, str], use_sudo: bool = False) -> None:
+        self.con.put(str(src_l), str(dst_r), use_sudo=use_sudo)
 
-    def get(self, src_r: Union[Path, str], dst_l: Union[Path, str]) -> None:
-        self.con.get(str(src_r), str(dst_l))
+    def get(self, src_r: Union[Path, str], dst_l: Union[Path, str], use_sudo: bool = False) -> None:
+        Path(dst_l).parent.mkdir(parents=True, exist_ok=True)
+        self.con.get(str(src_r), str(dst_l), use_sudo=use_sudo)
 
     def chown(
         self, dst_r: Union[Path, str], owner: str, group: Optional[str] = None

@@ -1,14 +1,13 @@
-from pathlib import Path
-from .context.config import Config
+from typing import Iterable, Optional
+from .commands import register
 from .utils import render
-from .context import Context
-from fabric import task
-import fabric.connection
+from .context import Context, ContextWithApp
 
 
-def generate_for_domains(c: Context, *domain_names: str) -> None:
+def generate_for_domains(c: ContextWithApp, *domain_names: str) -> None:
     domains = remove_reduntancy(domain_names)
     wildcard = any([d.startswith("*") for d in domains])
+    ovh_p: Optional[str]
     if wildcard:
         ovh_p = generate_ovh_ini(c)
         cmd = f"certbot certonly --dns-ovh --dns-ovh-credentials {ovh_p}"
@@ -23,7 +22,7 @@ def generate_for_domains(c: Context, *domain_names: str) -> None:
         c.sh.rm(ovh_p)
 
 
-def remove_reduntancy(r_domains: tuple[str]) -> list[str]:
+def remove_reduntancy(r_domains: Iterable[str]) -> list[str]:
     parent_domains: dict[str, set[str]] = {}
     for domain in r_domains:
         p_domain = domain.split(".", 1)[1]
@@ -53,30 +52,8 @@ def generate_ovh_ini(c: Context) -> str:
         return dst
 
 
-@task
-def generate_all(c):
-    # type: (fabric.connection.Connection) -> None
-    domains = []
-    domains_f = Path("zones") / "domains.txt"
-    domains_f.parent.mkdir(exist_ok=True)
-    domains_f.touch(exist_ok=True)
-    with domains_f.open("r") as f:
-        for d in f.readlines():
-            domain = d.split("#", 1)[0].strip()
-            if domain:
-                domains.append(domain)
-    c.sudo(
-        "certbot --nginx --expand -d '{domains}' --agree-tos \
-         --email {email} -n".format(
-            domains=",".join(domains), email=c.config.webmaster.email
-        )
-    )
-
-
-@task
-def renew(c):
-    # type: (fabric.connection.Connection) -> None
-    conf = Config.config_from_conection(c)
-    ovh_p = generate_ovh_ini(Context(config=conf, app=None, con=c, sh=None))  # type: ignore
-    c.sudo("certbot renew")
-    c.run(f"rm {ovh_p} -rf")
+@register(name="ssl:renew")
+def renew(c: Context) -> None:
+    ovh_p = generate_ovh_ini(c)
+    c.sh.sudo("certbot renew")
+    c.sh.rm(ovh_p)

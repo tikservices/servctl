@@ -109,7 +109,7 @@ class Config(BaseModel):
     shell: Optional[Shell]
 
     @classmethod
-    def import_from(cls, file_p: Union[str, Path]) -> "Config":
+    def import_from(cls, file_p: Union[str, Path] = 'config.yaml') -> "Config":
         global current_config
         path = Path(file_p)
         with path.open() as f:
@@ -119,15 +119,21 @@ class Config(BaseModel):
             return config
 
     @classmethod
-    def config_from(cls, c: fabric.config.Config) -> "Config":
+    def from_fabric_config(cls, c: fabric.config.Config) -> "Config":
         global current_config
         config = cls.parse_obj(c)
         current_config = config
         return config
 
     @classmethod
-    def config_from_conection(cls, c: fabric.connection.Connection) -> "Config":
-        return cls.config_from(cast(fabric.config.Config, c.config))
+    def from_fabric_connection(cls, c: fabric.connection.Connection) -> "Config":
+        return cls.from_fabric_config(cast(fabric.config.Config, c.config))
+
+    @classmethod
+    def get_instance(cls) -> "Config":
+        if current_config:
+            return current_config
+        return cls.import_from()
 
 
 current_config: Optional[Config] = None

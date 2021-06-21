@@ -5,10 +5,9 @@ import re
 from .app import App, ProjectTypes, DbTypes, DB, QueueTypes, WsgiTypes
 from pathlib import Path
 from ..utils import gen_random_token
-from giturlparse import parse as giturlparse
 
 
-class AttributeDict(dict):
+class AttributeDict(dict[str, Any]):
     def __getattr__(self, key: str) -> Any:
         try:
             return self[key]
@@ -47,7 +46,7 @@ def prompt(
         if not res and default:
             res = default
         if validate and re.findall(validate, res):
-            return res
+            break
         elif validate and not re.findall(validate, res):
             res = None
     return res

@@ -1,8 +1,8 @@
-from .context import Context
+from .context import ContextWithApp
 from github import Github, GithubException
 
 
-def create_push_webhook(c: Context) -> None:
+def create_push_webhook(c: ContextWithApp) -> None:
     if not c.app.repo.private:
         print("Skiping webhook registration")
         return
@@ -23,7 +23,7 @@ def create_push_webhook(c: Context) -> None:
         )
 
 
-def register_deploy_key(c: Context) -> None:
+def register_deploy_key(c: ContextWithApp) -> None:
     if not c.app.repo.private:
         print("Skiping deploy key registration")
         return
@@ -47,7 +47,7 @@ def register_deploy_key(c: Context) -> None:
             print("Key already deployed")
 
 
-def clone(c: Context) -> None:
+def clone(c: ContextWithApp) -> None:
     project_dir = c.app.project.src_dir
     branch = c.app.repo.branch
     clone_cmd_cl = "git clone {project_repo_url} --single-branch -b {branch}\
@@ -71,7 +71,7 @@ def clone(c: Context) -> None:
         c.sh.sudo(clone_cmd_pl, user="www-data")
 
 
-def gen_deploy_key(c: Context) -> None:
+def gen_deploy_key(c: ContextWithApp) -> None:
     key_p = c.app.repo.deploy_key
     if not key_p or c.sh.exists(key_p):
         return

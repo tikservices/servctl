@@ -2,6 +2,7 @@ from logging import warning
 from jinja2.environment import Template
 from .context import Context
 import secrets
+import sys
 from pathlib import Path
 from typing import Any, Union
 from fabric.connection import Connection
@@ -43,3 +44,7 @@ def safe_render_to(c: Context, t: Path, dst: Path, **kwargs: Any) -> bool:
     else:
         render_to(c, t, dst, **kwargs)
         return True
+
+
+def log(msg: str) -> None:
+    print(msg, end="\n", flush=True, file=sys.stderr)

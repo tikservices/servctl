@@ -1,10 +1,8 @@
-from .context import Context
+from .context import ContextWithApp
 from .utils import render, safe_render_to
-from fabric import task
-import fabric.connection
 
 
-def generate(c: Context, force: bool = False) -> None:
+def generate(c: ContextWithApp, force: bool = False) -> None:
     site_file = c.app.local_dir / "nginx.conf"
     t = (
         c.config.dirs.local.template
@@ -15,13 +13,13 @@ def generate(c: Context, force: bool = False) -> None:
     safe_render_to(c, t, site_file, with_certificates=True)
 
 
-def deploy(c: Context) -> None:
+def deploy(c: ContextWithApp) -> None:
     site_file = c.app.local_dir / "nginx.conf"
     c.sh.upload_etc(c.app, site_file, f"/etc/nginx/sites-enabled/{c.app.project.name}", mode=0o440)
     restart(c)
 
 
-def upload_tmp_nginx_site(c: Context) -> None:
+def upload_tmp_nginx_site(c: ContextWithApp) -> None:
     from tempfile import NamedTemporaryFile
 
     t = (
@@ -39,6 +37,6 @@ def upload_tmp_nginx_site(c: Context) -> None:
         c.sh.upload(f.name, dst_f, mode=0o740)
 
 
-def restart(c: Context) -> None:
+def restart(c: ContextWithApp) -> None:
     c.sh.sudo("nginx -t", warn=False)
     c.sh.systemd("restart", "nginx.service")

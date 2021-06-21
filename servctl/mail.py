@@ -1,7 +1,7 @@
-from fabfile.context.config import Config
+from pathlib import Path
+from .commands import register
+from .context.config import Config
 from typing import Union
-from fabric import task
-import fabric.connection
 from logging import warning
 import ovh
 import json
@@ -42,11 +42,9 @@ def register_email_alias(conf: Config, **alias: Union[str, list[str]]) -> None:
                 _add_email_alias(conf, e_alias, email)
 
 
-@task
-def email_alias(c, alias_f="emails.yaml"):
-    # type: (fabric.connection.Connection, str) -> None
-    config = Config.config_from_conection(c)
-    with open(alias_f) as f:
+@register(name="email:alias")
+def email_alias(config: Config, alias_f: Union[Path, str] = "emails.yaml") -> None:
+    with Path(alias_f).open() as f:
         emails_c = yaml.load(f.read())
     for domain, emails in emails_c.items():
         print("Generating for:", domain)

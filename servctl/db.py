@@ -1,9 +1,7 @@
-from .context import Context
-from typing import List, Optional, cast
-import fabric.connection
-from .context.config import Config
-from fabric import task
+from .context import Context, ContextWithApp
+from typing import List, Optional
 from .context.app import App, DbTypes
+from .commands import register
 
 
 def create_db_mysql(c: Context, name: str, password: str) -> None:
@@ -61,7 +59,7 @@ def create_psql_db_extensions(
         )
 
 
-def postgres_enable_superuser(c: Context, enable: bool) -> None:
+def postgres_enable_superuser(c: ContextWithApp, enable: bool) -> None:
     if not c.app.db or c.app.db.driver != DbTypes.POSTGRES:
         return
     opt = "SUPERUSER" if enable else "NOSUPERUSER"
@@ -69,7 +67,7 @@ def postgres_enable_superuser(c: Context, enable: bool) -> None:
     c.sh.sudo(f"psql -c '{cmd}'", user="postgres", pty=True)
 
 
-def setup(c: Context) -> None:
+def setup(c: ContextWithApp) -> None:
     assert c.app.db, "DB entry not defined on app file"
     name = c.app.db_name
     password = c.app.db.password
@@ -82,12 +80,10 @@ def setup(c: Context) -> None:
         create_psql_db_extensions(c, name, c.app.db.extensions)
 
 
-@task
-def shell(c, config_file=None, driver=None):
-    # type: (fabric.connection.Connection, Optional[str], Optional[str]) -> None
-    config = Config.config_from_conection(c)
-    if config_file:
-        app = App.import_from(config_file)
+@register("db:shell")
+def shell(ctxt: Context, app: Optional[App] = None, driver: Optional[str] = None) -> None:
+    config = ctxt.config
+    if app:
         assert app.db, "DB entry not defined on app file"
         name = app.project.name
         password = app.db.password
@@ -106,7 +102,7 @@ def shell(c, config_file=None, driver=None):
         else:
             password = ""
     if driver == "mysql":
-        c.run(
+        ctxt.sh.run(
             """
 mysql -hlocalhost -u {user} -p{password} -S /var/run/mysqld/mysqld.sock {name}
 """.format(
@@ -114,8 +110,10 @@ mysql -hlocalhost -u {user} -p{password} -S /var/run/mysqld/mysqld.sock {name}
             )
         )
     elif driver == "postgres":
-        c.run(
-            "PGPASSWORD={password} psql -U{user} {name}".format(
-                name=name, user=user, password=password
-            )
+        ctxt.sh.sudo(
+            f"psql -U{user} {name}",
+            user="postgres", pty=True,
+            env={
+                "PGPASSWORD": password,
+            },
         )

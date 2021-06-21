@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-from .context import Context, Config
+from .context import Context, Config, ContextWithApp
 from logging import warning
 import ovh
 import json
@@ -41,7 +41,7 @@ def get_client(config: Config) -> ovh.Client:
     return __client
 
 
-def _add_domain(c: Context, domain: str, force: bool = False) -> None:
+def _add_domain(c: ContextWithApp, domain: str, force: bool = False) -> None:
     top_domain = ".".join(domain.rsplit(".", maxsplit=2)[-2:])
     top_domain_len = len(top_domain) + 1
     subdomain = domain[:-top_domain_len]
@@ -83,13 +83,13 @@ def _add_domain(c: Context, domain: str, force: bool = False) -> None:
         _add_domain(c, domain)
 
 
-def register_domains(c: Context, force: bool = False, *domains: str) -> None:
+def register_domains(c: ContextWithApp, force: bool = False, *domains: str) -> None:
     for domain in domains:
         if not domain.startswith("*"):
             _add_domain(c, domain, force=force)
 
 
-def get_domains(c: Context) -> list[str]:
+def get_domains(c: ContextWithApp) -> list[str]:
     domains = []
     for domain in c.app.domains:
         domains.append(domain)

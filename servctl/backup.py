@@ -1,10 +1,10 @@
 from typing import Optional
-from fabfile.context import Context
+from .context import ContextWithApp
 from . import db
 from datetime import date
 
 
-def backup(c: Context, name: Optional[str] = None) -> None:
+def backup(c: ContextWithApp, name: Optional[str] = None) -> None:
     if not name:
         name = date.today().isoformat()
     # backup psql db
@@ -25,7 +25,7 @@ def backup(c: Context, name: Optional[str] = None) -> None:
     c.sh.get(dir_r, dir_l)
 
 
-def restore(c: Context, name: str) -> None:
+def restore(c: ContextWithApp, name: str) -> None:
     sql_r = f"/tmp/{c.app.project.name}-{name}.sql.tar"
     sql_l = f"./backups/{c.app.project.name}-{name}.sql.tar"
     cmd_sql = f"""pg_restore {sql_r} --dbname={c.app.project.name} \

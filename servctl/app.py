@@ -1,12 +1,9 @@
-import os
-import sys
-from typing import Optional
-from fabric import task
-import fabric.connection
-from invoke import Collection
 from .context.app_generator import create_app
-from .utils import gen_random_token
-from .context import Context, Config
+from typing import Optional
+from pathlib import Path
+from .utils import log
+from .context import Config, ContextWithApp
+from .commands import register
 from .context.app import ProjectTypes
 from . import (
     db,
@@ -18,41 +15,22 @@ from . import (
     celery,
     webmaster,
     dotenv,
-    mail,
     nginx,
     gunicorn,
     uwsgi,
     backup as backup_m,
 )
 
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def log(msg: str) -> None:
-    print(msg, end="\n", flush=True, file=sys.stderr)
-
-
-@task
-def sync_odoo(c):
-    # type: (fabric.connection.Connection) -> None
-    c.put("./odoo", "/etc", use_sudo=True)
-    server.restart_services(c, "odoo")
+@register(name="app:init")
+def init(config: Config, host: str) -> None:
+    app = create_app(config, host)
+    app.export(config)
+    print("Config exported to:", app.get_app_file_path(config))
 
 
-@task
-def init(c):
-    # type: (fabric.connection.Connection) -> None
-    conf = Config.config_from_conection(c)
-    app = create_app(conf, c.host)
-    app.export(conf)
-    generate(c, str(app.get_app_file_path()))
-
-
-@task
-def generate(c, config_file):
-    # type: (fabric.connection.Connection, str) -> None
-    ctxt = Context.from_app_config(c, config_file, offline=True)
+@register(name="app:generate")
+def generate(ctxt: ContextWithApp) -> None:
+    # ctxt = ContextWithApp.from_app_config(config_file, ctxt_)
     app = ctxt.app
 
     log("[Server/Generate]")
@@ -67,18 +45,18 @@ def generate(c, config_file):
         uwsgi.generate(ctxt, template=app.project.type.name)
     if app.project.type == ProjectTypes.DJANGO:
         # log("[Django/Generate_Settings_Secrets]")
-        # django.generate_settings_secrets(c)
+        # django.generate_settings_secrets(ctxt)
         pass
     log("[Dotenv/Generate]")
     dotenv.generate(ctxt)
 
 
-@task(default=True)
-def deploy(c, config_file, force_dns=False):
-    # type: (fabric.connection.Connection, str, bool) -> None
-    log(f"deploying into: {c.host}")
-    ctxt = Context.from_app_config(c, config_file)
+@register(name="app:deploy")
+def deploy(ctxt: ContextWithApp, force_dns: bool = False) -> None:
+    # ctxt = ContextWithApp.from_app_config(config_file, ctxt_)
     app = ctxt.app
+
+    log(f"deploying into: {app.project.host}")
 
     log("[Server/Create_Project_Dirs]")
     server.create_projects_dirs(ctxt)
@@ -94,7 +72,7 @@ def deploy(c, config_file, force_dns=False):
     log("[Dotenv/Sync]")
     dotenv.deploy(ctxt)
     # log("[Django/Sync_Settings_Secrets]")
-    # django.sync_settings_secrets(c)
+    # django.sync_settings_secrets(ctxt)
     log("[DNS/Register_Domains]")
     domains = dns.get_domains(ctxt)
     dns.register_domains(ctxt, force_dns, *domains)
@@ -123,51 +101,11 @@ def deploy(c, config_file, force_dns=False):
     # webmaster.ping_sitemap(ctxt)
 
 
-@task()
-def backup(c, config_file, name=None):
-    # type: (fabric.connection.Connection, str, Optional[str]) -> None
-    ctxt = Context.from_app_config(c, config_file)
+@register(name="app:backup")
+def backup(ctxt: ContextWithApp, name: Optional[str] = None) -> None:
     backup_m.backup(ctxt, name)
 
 
-@task()
-def restore(c, config_file, name):
-    # type: (fabric.connection.Connection, str, str) -> None
-    ctxt = Context.from_app_config(c, config_file)
+@register(name="app:restore")
+def restore(ctxt: ContextWithApp, config_file: Path, name: str) -> None:
     backup_m.restore(ctxt, name)
-
-
-@task
-def gen_token(c, length=50):
-    # type: (fabric.connection.Connection, int) -> None
-    print(gen_random_token(length=length))
-
-
-@task
-def email_alias(c):
-    # type: (fabric.connection.Connection) -> None
-    mail.email_alias(c)
-
-
-ns = Collection(
-    deploy,
-    init,
-    generate,
-    backup,
-    restore,
-    sync_odoo,
-    gen_token,
-    db,
-    django,
-    server,
-    ssl,
-    dns,
-    git,
-    celery,
-    webmaster,
-    dotenv,
-    mail,
-    email_alias,
-    gunicorn,
-    uwsgi,
-)

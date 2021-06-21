@@ -1,7 +1,7 @@
-from .context import Context
+from .context import Context, ContextWithApp
 
 
-def ping_sitemap(c: Context) -> None:
+def ping_sitemap(c: ContextWithApp) -> None:
     # curl -c1 http://www.google.com/webmasters/sitemaps/ping?sitemap=
     # curl -c1 https://www.bing.com/webmaster/ping.aspx?siteMap=
     sitemap = f"https://{c.app.domains[0]}/sitemap.xml"

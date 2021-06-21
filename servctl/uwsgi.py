@@ -1,9 +1,9 @@
-from .context import Context
+from .context import Context, ContextWithApp
 from .context.app import WsgiTypes
 from .utils import safe_render_to
 
 
-def generate(c: Context, template: str = "django") -> None:
+def generate(c: ContextWithApp, template: str = "django") -> None:
     if not c.app.wsgi or c.app.wsgi.type != WsgiTypes.UWSGI:
         return
     app_file = c.app.local_dir / "uwsgi.ini"
@@ -11,7 +11,7 @@ def generate(c: Context, template: str = "django") -> None:
     safe_render_to(c, t, app_file)
 
 
-def deploy(c: Context) -> None:
+def deploy(c: ContextWithApp) -> None:
     if not c.app.wsgi or c.app.wsgi.type != WsgiTypes.UWSGI:
         return
     app_file = c.app.local_dir / "uwsgi.ini"
@@ -19,7 +19,7 @@ def deploy(c: Context) -> None:
     activate(c)
 
 
-def activate(c: Context) -> None:
+def activate(c: ContextWithApp) -> None:
     if not c.app.wsgi or c.app.wsgi.type != WsgiTypes.UWSGI:
         return
     c.sh.systemd("reload")
@@ -28,7 +28,7 @@ def activate(c: Context) -> None:
     c.sh.systemd("restart", "uwsgi.service")
 
 
-def setup(c: Context) -> None:
+def setup(c: ContextWithApp) -> None:
     if not c.app.wsgi or c.app.wsgi.type != WsgiTypes.UWSGI:
         return
     generate(c)
