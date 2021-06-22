@@ -1,0 +1,13 @@
+---
+- name: config host
+  ansible.builtin.copy:
+    src: ../template/etc/host.conf
+    dest: /etc/host.conf
+
+# - name: Add Google DNS nameserver
+#   lineinfile:
+#     dest="/etc/resolvconf/resolv.conf.d/base"
+#     line="nameserver 8.8.8.8"
+# 
+# - name: Update nameserver list
+#   command: "resolvconf -u"

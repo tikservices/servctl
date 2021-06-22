@@ -1,0 +1,9 @@
+---
+- name: Install golang toolchain
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - golang  # TODO golang-{1.16}
+  tags: python

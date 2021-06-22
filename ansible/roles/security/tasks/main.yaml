@@ -1,0 +1,6 @@
+---
+- include: sysctl.yaml
+- include: ufw.yaml
+- include: logwatch.yaml
+- include: fail2ban.yaml
+- include: unattended-upgrades.yaml

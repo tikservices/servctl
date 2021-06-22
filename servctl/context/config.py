@@ -77,6 +77,7 @@ class Sysadmin(BaseModel):
     full_name: str
     username: str
     password: Optional[str]
+    email: str
 
 
 class Ssh(BaseModel):

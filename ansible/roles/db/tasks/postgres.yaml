@@ -1,0 +1,51 @@
+---
+- name: Add key for Postgres repo
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add Postgres repo to sources list
+  apt_repository:
+    repo: 'deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main'
+    state: present
+    update_cache: yes
+
+- name: install postgresql
+  package:
+    name:
+      - postgresql  # TODO: postgresql-{13}
+      - postgresql-server-dev-all
+      - postgresql-client
+      - libpq-dev
+      - libxslt-dev
+      - libxml2-dev
+    state: present
+  tags: postgres
+
+- name: Install postgresql python module
+  package:
+    name: ['python3-psycopg2']
+    state: present
+  tags: postgres
+
+- name: Enable local socket auth with password/md5
+  postgresql_pg_hba:
+    dest: "{{ item }}"
+    contype: local
+    users: all
+    databases: all
+    method: md5
+  with_items:
+    - "/etc/postgresql/13/main/pg_hba.conf"
+    # - "/etc/postgresql/12/main/pg_hba.conf"
+    # - "/etc/postgresql/10/main/pg_hba.conf"
+    # - "/etc/postgresql/11/main/pg_hba.conf"
+    # - "/etc/postgresql/9.5/main/pg_hba.conf"
+  tags: postgres
+
+- name: enable postgresql
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+    enabled: true
+  tags: postgres

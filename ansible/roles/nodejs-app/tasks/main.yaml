@@ -1,0 +1,12 @@
+---
+- name: setup nodejs dev tools
+  include_role:
+    name: geerlingguy.nodejs
+  vars:
+    nodejs_version: "14.x"
+    # nodejs_npm_global_packages:
+    #   - name: yarn
+
+- name: setup nodejs yarn
+  include_role:
+    name: Oefenweb.yarn

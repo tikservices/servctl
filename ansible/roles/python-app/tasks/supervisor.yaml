@@ -1,0 +1,11 @@
+---
+- name: install supervisor
+  package:
+    name: supervisor
+  tags: supervisor
+- name: enable supervisor
+  service:
+    name: supervisor
+    state: started
+    enabled: true
+  tags: supervisor

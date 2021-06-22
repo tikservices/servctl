@@ -1,0 +1,41 @@
+---
+- name: add user group
+  group:
+    # gid: 113
+    name: admin
+    state: present
+- name: add admin user
+  user:
+    name: "{{ sysadmin.username }}"
+    password: "{{ sysadmin.password  | password_hash('sha512') }}"
+    comment: System Administrator
+    shell: /bin/bash
+    group: admin
+    update_password: on_create
+    state: present
+
+    generate_ssh_key: yes
+    ssh_key_type: ed25519
+    ssh_key_passphrase: "{{ ssh.passphrase }}"
+
+- name: add admin user to www-data group
+  user:
+    name: "{{ sysadmin.username }}"
+    groups:
+      - www-data
+    append: yes
+
+- name: sudoers
+  ansible.builtin.template:
+    src: ../template/etc/sudoers.jinja2
+    dest: /etc/sudoers
+    validate: /usr/sbin/visudo -cf %s
+    owner: root
+    group: root
+    mode: 0440
+
+- name: Change root password
+  user:
+    name: root
+    password: "{{ sysadmin.password  | password_hash('sha512') }}"
+    shell: /bin/bash

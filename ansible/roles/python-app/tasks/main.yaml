@@ -1,0 +1,5 @@
+---
+- include: python.yaml
+- include: celery.yaml
+- include: celery.yaml
+- include: gunicorn.yaml

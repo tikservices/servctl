@@ -1,0 +1,11 @@
+
+- name: Setup Ruby dev tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - ruby-full
+      - ruby-dev
+      - ruby-bundler
+  tags: ruby

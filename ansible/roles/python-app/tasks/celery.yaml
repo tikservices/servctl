@@ -1,0 +1,29 @@
+---
+- name: Celery - Create Dir
+  file:
+    path: /etc/celery/
+    state: directory
+    mode: 0755
+    owner: www-data
+    group: www-data
+  tags: celery
+- name: Celery - Sync Services & Tmpfiles
+  copy:
+    src: "../template/celery/{{ item.name }}"
+    dest: "{{ item.dst }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { name: 'celery.service', dst: '/etc/systemd/system/' }
+    - { name: 'celerybeat.service', dst: '/etc/systemd/system/' }
+    - { name: 'celery@.service', dst: '/etc/systemd/system/' }
+    - { name: 'celerybeat@.service', dst: '/etc/systemd/system/' }
+    - { name: 'celery.tmpfiles', dst: '/etc/tmpfiles.d/celery.conf' }
+  tags: celery
+
+- name: System daemon-reload
+  systemd:
+    daemon_reload: yes
+- name: System tmpfiles create
+  ansible.builtin.command: systemd-tmpfiles --create

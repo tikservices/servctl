@@ -1,0 +1,13 @@
+---
+- name: install php-fpm
+  package:
+    name: php7.4-fpm
+    state: present
+  tags: php-fpm
+
+- name: enable php-fpm
+  service:
+    name: php7.4-fpm
+    state: started
+    enabled: true
+  tags: php-fpm

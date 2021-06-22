@@ -1,0 +1,25 @@
+---
+- name: setup security tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - logwatch
+
+- name: config logwatch
+  ansible.builtin.copy:
+    src: ../template/etc/cron/00logwatch
+    dest: /etc/cron.daily/00logwatch
+    owner: root
+    group: root
+    mode: 0644
+
+- name: update-notifier-common installed
+  apt: pkg="update-notifier-common" state=present
+  ignore_errors: True
+
+- name: Check our update notify technology
+  stat:
+    path: /etc/update-motd.d
+  register: have_update_motd_d

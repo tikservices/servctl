@@ -1,0 +1,4 @@
+---
+- include: postgres.yaml
+- include: mysql.yaml
+- include: redis.yaml

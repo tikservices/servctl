@@ -1,0 +1,16 @@
+---
+- name: setup security tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - fail2ban
+
+- name: enable security services
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  with_items:
+    - fail2ban

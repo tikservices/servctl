@@ -1,0 +1,13 @@
+---
+- name: add datadog key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: A2923DFF56EDA6E76E55E492D3A80E30382E94DE
+  tags: datadog
+
+- name: setup datadog
+  include_role:
+    name: datadog.datadog
+  vars:
+    datadog_api_key: "{{ datadog.api_key }}"
+  tags: datadog

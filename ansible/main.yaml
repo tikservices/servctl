@@ -1,0 +1,31 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - ../config.yaml
+  roles:
+    - common
+    - security
+    - backup
+    # - monitoring  # FIXME
+
+- hosts: web
+  become: true
+  vars_files:
+    - ../config.yaml
+  roles:
+    - web
+    - python-app
+    - nodejs-app
+    - ruby-app
+    - php-app
+    # - golang
+    # - rust
+
+- hosts: databases
+  become: yes
+  vars_files:
+    - ../config.yaml
+
+  roles:
+    - db

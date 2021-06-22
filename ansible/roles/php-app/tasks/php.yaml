@@ -1,0 +1,25 @@
+---
+- name: setup php dev tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - php-cli
+      - php-mbstring
+      - php-opcache
+      - php-curl
+      - php-gd
+      - php-intl
+      - php-json
+      - php-mysql
+      - php-pgsql
+      - php-readline
+      - php-xml
+      - php-sqlite3
+  tags: php
+
+- name: setup php composer
+  include_role:
+    name: geerlingguy.composer
+  tags: php

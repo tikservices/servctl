@@ -1,0 +1,27 @@
+---
+- name: setup security tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - unattended-upgrades
+
+- name: config unattended-upgrades
+  ansible.builtin.copy:
+    src: "../template/etc/apt/apt.conf.d/{{ item }}"
+    dest: "/etc/apt/apt.conf.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 10periodic
+    - 50unattended-upgrades
+
+- name: enable security services
+  service:
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  with_items:
+    - unattended-upgrades

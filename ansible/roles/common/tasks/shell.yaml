@@ -1,0 +1,49 @@
+---
+- name: setup base utils
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - zsh
+      - zsh-syntax-highlighting
+  tags: shell
+
+- name: add default scripts
+  ansible.builtin.copy:
+    src: ../template/scripts/
+    dest: /usr/local/bin/
+    mode: 0555
+  tags: shell
+
+- name: Set zsh as default shell
+  user:
+    name: "{{ sysadmin.username }}"
+    shell: /usr/bin/zsh
+  tags: shell
+
+- name: add global dotfiles
+  ansible.builtin.copy:
+    src: "../template/etc/{{ item }}"
+    dest: "/etc/apt/{{ item }}"
+  with_items:
+    - zsh
+  tags: shell
+
+- name: source zsh dotfiles
+  lineinfile:
+    path: /etc/zsh/zshrc
+    create: yes
+    state: present
+    line: 'for r in /etc/zsh/*.zsh; do source $r; done'
+  tags: shell
+
+- name: zshrc
+  lineinfile:
+    path: "/home/{{ sysadmin.username }}/.zshrc"
+    create: yes
+    state: present
+    line: '#'
+  tags:
+    - zshrc
+  tags: shell

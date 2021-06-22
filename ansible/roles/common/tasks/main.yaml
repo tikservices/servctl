@@ -1,0 +1,6 @@
+---
+- include: base.yaml
+- include: shell.yaml
+- include: net.yaml
+- include: mail.yaml
+- include: git.yaml

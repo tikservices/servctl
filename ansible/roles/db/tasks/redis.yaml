@@ -1,0 +1,10 @@
+---
+- name: install redis
+  package:
+    name: redis-server
+    state: present
+- name: enable redis
+  ansible.builtin.service:
+    name: redis
+    state: started
+    enabled: true

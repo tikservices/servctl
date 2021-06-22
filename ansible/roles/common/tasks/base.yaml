@@ -1,0 +1,38 @@
+---
+- name: upgrade packages
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Ensure the locale exists
+  locale_gen:
+    name: en_US.UTF-8
+    state: present
+
+- name: Set timezone to UTC
+  timezone:
+    name: UTC
+- name: Set timezone to UTC - timedatectl
+  shell: timedatectl set-timezone "UTC"
+
+- name: set as default locale
+  ansible.builtin.command: localectl set-locale LANG=en_US.UTF-8
+
+- name: setup base utils
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - build-essential
+      - vim
+      - tmux
+      - wget
+      - curl
+      - htop
+      - zip
+      - unzip
+      - software-properties-common
+      - rsync
+      - python3-apt

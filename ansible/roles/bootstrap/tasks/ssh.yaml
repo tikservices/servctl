@@ -1,0 +1,30 @@
+---
+- name: ssh-copy-id
+  authorized_key:
+    user: "{{ sysadmin.username }}"
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+  tags: ssh
+
+- name: config sshd
+  ansible.builtin.template:
+    src: ../template/etc/ssh/sshd_config.jinja2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0600
+    validate: /usr/sbin/sshd -t -f %s
+    backup: yes
+  tags: ssh
+
+- name: generate ed25519 host key
+  ansible.builtin.command: ssh-keygen -q -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -C "" -N ""
+  args:
+    creates: /etc/ssh/ssh_host_ed25519_key
+  tags: ssh
+
+- name: restart ssh
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  tags: ssh

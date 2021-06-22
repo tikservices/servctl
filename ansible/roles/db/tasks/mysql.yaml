@@ -1,0 +1,59 @@
+---
+- name: install mysql
+  package:
+    name:
+      - mysql-server
+      - libmysqlclient-dev
+    state: present
+  tags: mysql
+
+- name: Install MySQL-python for Ansible
+  package:
+    name:
+      - python3-pymysql
+      - python3-mysqldb
+    state: present
+  tags: mysql
+
+- name: enable mysql
+  ansible.builtin.service:
+    name: mysql
+    state: started
+    enabled: true
+  tags: mysql
+
+- name: Set root user password
+  mysql_user:
+    host: "{{ item }}"
+    name: root
+    password: "{{ db.mysql.root_password }}"
+    check_implicit_admin: yes
+    state: present
+    login_user: root
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    # login_password="{{ mysql_old_root_password }}"
+  with_items:
+    - '::1'
+    - '127.0.0.1'
+    - 'localhost'
+  ignore_errors: yes
+  tags: mysql
+
+- name: Removes all anonymous user accounts
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ db.mysql.root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  tags: mysql
+
+- name: test database is absent
+  mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ db.mysql.root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  tags: mysql

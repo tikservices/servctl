@@ -1,0 +1,38 @@
+---
+- name: setup mail utils
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - msmtp
+      - msmtp-mta
+      - bsd-mailx
+  tags: mail
+
+- name: config msmtp
+  ansible.builtin.copy:
+    src: ../secrets/msmtprc
+    dest: /etc/msmtprc
+    owner: root
+    group: root
+    mode: 0444
+  tags: mail
+
+- name: create msmtp log file
+  file:
+    path: /var/log/msmtp.log
+    state: touch
+    owner: root
+    group: root
+    mode: 0622
+  tags: mail
+
+- name: config email aliases
+  ansible.builtin.copy:
+    src: ../secrets/aliases
+    dest: /etc/aliases
+    owner: root
+    group: root
+    mode: 0644
+  tags: mail

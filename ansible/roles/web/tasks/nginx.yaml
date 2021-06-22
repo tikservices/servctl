@@ -1,0 +1,73 @@
+---
+- name: install nginx
+  package:
+    name: nginx
+    state: present
+  tags: nginx
+
+- name: Remove default nginx config
+  file: name=/etc/nginx/sites-enabled/default state=absent
+  tags: nginx
+
+- name: config nginx
+  copy:
+    src: "{{ item }}"
+    dest: /etc/nginx/
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - ../template/nginx/nginx.conf
+    - ../template/nginx/mime.types
+    - ../template/nginx/conf.server.d
+    - ../template/nginx/conf.d
+    - ../template/nginx/errors
+    # - ../template/nginx/htpasswd
+  tags: nginx
+
+- name: reconfig default nginx configs
+  copy:
+    src: "../template/nginx/sites-available/{{ item }}"
+    dest: "/etc/nginx/sites-available/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - redirect-https
+    - redirect-no-www
+    # - no-default
+  tags: nginx
+
+- name: reenable default nginx configs
+  file:
+    src: "/etc/nginx/sites-available/{{ item }}"
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+    state: link
+  with_items:
+    - redirect-https
+    - redirect-no-www
+    # - no-default
+  tags: nginx
+
+- name: Make sure /etc/nginx/ssl exists
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: 0755
+- name: Generate dhparam file
+  command: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
+    creates=/etc/nginx/ssl/dhparam.pem
+
+- name: check nginx
+  ansible.builtin.command: nginx -t
+  tags: nginx
+
+- name: enable nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: true
+  tags: nginx

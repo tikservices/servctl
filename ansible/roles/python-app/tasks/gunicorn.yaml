@@ -1,0 +1,28 @@
+
+- name: Gunicorn - Create Dir
+  file:
+    path: /etc/gunicorn/
+    state: directory
+    mode: 0755
+    owner: www-data
+    group: www-data
+  tags: gunicorn
+- name: Gunicorn - Sync Services & Tmpfiles
+  copy:
+    src: "../template/gunicorn/{{ item.name }}"
+    dest: "{{ item.dst }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - { name: 'gunicorn.service', dst: '/etc/systemd/system/' }
+    - { name: 'gunicorn@.service', dst: '/etc/systemd/system/' }
+    - { name: 'gunicorn@.socket', dst: '/etc/systemd/system/' }
+    - { name: 'gunicorn.tmpfiles', dst: '/etc/tmpfiles.d/gunicorn.conf' }
+  tags: gunicorn
+
+- name: System daemon-reload
+  systemd:
+    daemon_reload: yes
+- name: System tmpfiles create
+  ansible.builtin.command: systemd-tmpfiles --create

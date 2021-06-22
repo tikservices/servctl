@@ -1,0 +1,23 @@
+---
+# - name: add certbot repo
+#   apt_repository:
+#     repo: ppa:certbot/certbot
+#   tags: certbot
+
+- name: install certbot
+  package:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - certbot
+      - python3-certbot-nginx
+      - python3-certbot-dns-ovh
+  tags: certbot
+
+- name: enable certbot auto renewal
+  service:
+    name: certbot
+    enabled: true
+  tags: certbot
