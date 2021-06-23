@@ -12,7 +12,7 @@
 - name: add global dotfiles
   ansible.builtin.copy:
     src: "../template/etc/{{ item }}"
-    dest: "/etc/apt/{{ item }}"
+    dest: "/etc/{{ item }}"
   with_items:
     - gitconfig
   tags: git

@@ -24,10 +24,9 @@
 
 - name: add global dotfiles
   ansible.builtin.copy:
-    src: "../template/etc/{{ item }}"
-    dest: "/etc/apt/{{ item }}"
-  with_items:
-    - zsh
+    src: "../template/etc/zsh/"
+    dest: "/etc/zsh"
+    mode: 0555
   tags: shell
 
 - name: source zsh dotfiles

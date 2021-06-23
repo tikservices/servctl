@@ -6,20 +6,33 @@
   vars:
     packages:
       - logwatch
+  tags: logwatch
 
 - name: config logwatch
+  ansible.builtin.template:
+    src: ../template/etc/logwatch/conf/logwatch.conf.jinja2
+    dest: /etc/logwatch/conf/logwatch.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: logwatch
+
+- name: config logwatch cron job
   ansible.builtin.copy:
     src: ../template/etc/cron/00logwatch
     dest: /etc/cron.daily/00logwatch
     owner: root
     group: root
     mode: 0644
+  tags: logwatch
 
 - name: update-notifier-common installed
   apt: pkg="update-notifier-common" state=present
   ignore_errors: True
+  tags: logwatch
 
 - name: Check our update notify technology
   stat:
     path: /etc/update-motd.d
   register: have_update_motd_d
+  tags: logwatch

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -eq 0 ];
+then
+	sudo -u www-data -g www-data env HOME=/var/www bash --rcfile /var/www-data/.bashrc -i
+else
+	sudo -u www-data -g www-data env HOME=/var/www bash --rcfile /var/www-data/.bashrc -c "$*"
+fi;

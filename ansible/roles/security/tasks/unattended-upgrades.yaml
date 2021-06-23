@@ -8,8 +8,8 @@
       - unattended-upgrades
 
 - name: config unattended-upgrades
-  ansible.builtin.copy:
-    src: "../template/etc/apt/apt.conf.d/{{ item }}"
+  ansible.builtin.template:
+    src: "../template/etc/apt/apt.conf.d/{{ item }}.jinja2"
     dest: "/etc/apt/apt.conf.d/{{ item }}"
     owner: root
     group: root
