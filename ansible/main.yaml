@@ -21,6 +21,7 @@
     - php-app
     # - golang
     # - rust
+    - storage
 
 - hosts: databases
   become: yes

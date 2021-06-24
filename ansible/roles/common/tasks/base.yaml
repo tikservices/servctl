@@ -36,3 +36,11 @@
       - software-properties-common
       - rsync
       - python3-apt
+
+- name: create Systemd directories
+  file:
+    path: /etc/sysusers.d/
+    state: directory
+    mode: 0755
+    owner: root
+    group: root

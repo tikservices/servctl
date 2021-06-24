@@ -17,6 +17,8 @@ giturlparse = {git = "https://github.com/lejenome/giturlparse",editable = true,r
 mypy = "*"
 types-pyyaml = "*"
 lxml = "*"
+ansible = "*"
+paramiko = "*"
 
 [dev-packages]
 

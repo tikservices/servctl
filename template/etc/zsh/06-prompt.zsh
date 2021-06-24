@@ -33,7 +33,6 @@ $PROMPT"
 $PROMPT"
   fi
   if [ -n "${SSH_CONNECTION}" ]; then
-	  PROMPT="%F{9}(SSH:%F{7}%{$IT%}${SSH_CONNECTION// *}%{$ST%}%F{1})%f
-$PROMPT"
+	  PROMPT="%F{9}(SSH:%F{7}%{$IT%}${SSH_CONNECTION// *}%{$ST%}%F{1})%f $PROMPT"
   fi
 }
