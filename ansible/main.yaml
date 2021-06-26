@@ -30,3 +30,18 @@
 
   roles:
     - db
+
+- hosts: visio-host
+  become: true
+  vars_files:
+    - ../config.yaml
+  roles:
+    - role: bigbluebutton-host
+      tags: bbb-host
+
+- hosts: visio
+  become: true
+  vars_files:
+    - ../config.yaml
+  roles:
+    - bigbluebutton

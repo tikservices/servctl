@@ -1,0 +1,170 @@
+---
+- name: install bbb required tools
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - python3  # TODO python{3.9}
+      - python3-pip
+      - net-tools
+  tags: bbb
+
+- name: Fix redis-server.service perms - mkdir dir
+  ansible.builtin.file:
+    path: /etc/systemd/system/redis-server.service.d/
+    state: directory
+    mode: '0755'
+
+- name: Fix redis-server.service perms - upload config
+  copy:
+    src: ../template/etc/systemd/system/redis-server.service.d/zzz-zzz-fix-perms.conf
+    dest: /etc/systemd/system/redis-server.service.d/zzz-zzz-fix-perms.conf
+    owner: "root"
+    mode: '0644'
+
+- name: disable auditd service inside lxd container
+  ansible.builtin.file:
+    src: /dev/null
+    dest: /etc/systemd/system/auditd.service
+    owner: root
+    group: root
+    state: link
+
+- name: Reload systemd config
+  systemd: daemon_reload=yes
+
+- name: BBB settings
+  set_fact:
+    bigbluebutton_hostname: "{{ bigbluebutton.url | urlsplit('hostname') }}"
+  tags: bbb
+
+- name: Install ovh sdk
+  pip:
+    name: ovh
+  tags: bbb
+
+- name: Create BBB OVH DNS
+  ovh_dns:
+    state: present
+    domain: "{{ bigbluebutton_hostname.split('.')[-2:] | join('.') }}"
+    name: "{{ bigbluebutton_hostname.split('.')[:-2] | join('.') }}"
+    type: A  # CNAME
+    value: "{{ ansible_default_ipv4.address }}"
+    # replace: *
+    create: true
+  environment:
+    OVH_ENDPOINT: "{{ ovh.endpoint }}"
+    OVH_APPLICATION_KEY: "{{ ovh.application_key }}"
+    OVH_APPLICATION_SECRET: "{{ ovh.application_secret }}"
+    OVH_CONSUMER_KEY: "{{ ovh.consumer_key }}"
+  tags: bbb
+
+- name: Setup BigBlueButon
+  include_role:
+    name: ebbba.bigbluebutton
+    apply:
+      tags:
+        - ebbb
+        - bbb
+  vars:
+    bbb_hostname: "{{ bigbluebutton.url | urlsplit('hostname') }}"
+    bbb_secret: "{{ bigbluebutton.secret }}"
+    bbb_letsencrypt_email: "{{ sysadmin.email }}"
+    bbb_coturn_secret: "{{ lookup('password', '../secrets/{{ inventory_hostname }}/bbb_coturn_secret length=32 chars=hexdigits') }}"
+    bbb_freeswitch_socket_password: "{{ lookup('password', '../secrets/{{ inventory_hostname }}/bbb_freeswitch_socket_password length=16 chars=ascii_letters,digits') }}"
+    bbb_nginx_privacy: false
+    bbb_default_welcome_message: "Welcome to <b>%%CONFNAME%%</b>!"
+    bbb_default_welcome_message_footer: " "
+    bbb_greenlight_enable: false
+    bbb_api_demos_enable: false
+    bbb_client_log_enable: false
+    bbb_mute_on_start: true
+    bbb_meteor:
+      public:
+        app:
+          askForFeedbackOnLogout: false
+          skipCheck: true
+          mirrorOwnWebcam: false
+          enableMultipleCameras: true
+          enableNetworkInformation: true
+          breakoutRoomLimit: 8
+          warnAboutUnsavedContentOnMeetingEnd: true
+          listenOnlyMode: false
+          lockOnJoin: true  # ?
+          clientTitle: Meeting Room
+          appName: Meeting Room
+          copyright: ""
+          helpLink: https://bigbluebutton.org/teachers/tutorials/
+          viewersInWebcam: 8
+          branding:
+              displayBrandingArea: false
+          showHelpButton: false
+          skipCheckOnJoin: true
+        chat:
+          startClosed: true
+          typingIndicator:
+            enabled: false
+        presentation:
+            allowDownloadable: true
+            defaultPresentationFile: default.pdf
+        layout:
+            hidePresentation: false
+            showParticipantsOnLogin: true
+        media:
+          sipjsHackViaWs: true
+    bbb_freeswitch_ipv6: false
+    bbb_webhooks_enable: true
+    bbb_monitoring_all_in_one_enable: false
+    bbb_monitoring_systemd_enable: false
+    bbb_guestpolicy: ALWAYS_ACCEPT
+    bbb_html5_backend_processes: 1
+    bbb_html5_frontend_processes: 1
+    bbb_max_file_size_upload: 30000000  # 30 MB
+    bbb_default_max_users: 0
+    bbb_default_meeting_duration: 0
+    bbb_disable_recordings: false
+    bbb_breakout_rooms_enabled: true
+    bbb_breakout_rooms_record: true
+    bbb_breakout_rooms_privatechat_enabled: true
+    bbb_container_compat: true
+    # bbb_nodejs_version: 12
+    # bbb_ssh_port: '22'
+  tags:
+    - bbb
+    - ebbb
+
+
+- name: Install bb-download - clone
+  ansible.builtin.git:
+    repo: https://github.com/tikservices/bbb-download
+    dest: /opt/bbb-download
+  tags: bbb
+
+- name: Install bb-download - install
+  ansible.builtin.command:
+    cmd: /opt/bbb-download/install.sh
+    chdir: /opt/bbb-download
+  tags: bbb
+
+- name: update bigbluebutton-default public dir - remove unneeded files
+  ansible.builtin.file:
+    path: "/var/www/bigbluebutton-default/{{ item }}"
+    state: absent
+  with_items:
+    - index_html5_vs_flash.html
+    - testjava.html
+    - favicon.ico
+    - home.html
+    - help.html
+  tags: bbb
+
+- name: update bigbluebutton-default public dir - upload new files
+  ansible.builtin.copy:
+    dest: /var/www/bigbluebutton-default/
+    src: ../template/bbb-www/
+    owner: root
+    group: root
+    mode: '0644'
+    directory_mode: '0755'
+  tags: bbb

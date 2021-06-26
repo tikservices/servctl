@@ -1,0 +1,90 @@
+---
+- name: Install lxd
+  package:
+    name: "{{ item }}"
+  with_items:
+    - lxd
+    - python3-lxc
+
+- name: add admin user to lxd group
+  user:
+    name: "{{ sysadmin.username }}"
+    groups:
+      - lxd
+      - kvm
+    append: yes
+
+- name: Create ZFS storage for LXD
+  command: "lxc storage create default zfs source={{ container_disk }}"
+  register: lxd_zfs_res
+  changed_when: lxd_zfs_res.rc == 0
+  failed_when: "lxd_zfs_res.rc != 0 and lxd_zfs_res.stderr != 'Error: The storage pool already exists'"
+
+# - name: Init LXD
+#   command: "lxd init --auto"
+
+- name: Create bigbluebutton lxd profile
+  community.general.lxd_profile:
+    name: bigbluebutton
+    state: present
+    description: bigbluebutton profile
+    devices:
+      root:
+        type: disk
+        path: /
+        pool: default
+        required: "true"
+      eth1:
+        type: nic
+        nictype: macvlan
+        parent: "{{ ansible_default_ipv4.interface }}"
+        name: eth1
+        hwaddr: "{{ container_mac }}"
+    config:
+      limits.cpu: 0-3
+      limits.memory: 8GB
+      security.privileged: "true"
+      security.nesting: "true"
+
+      user.user-data: |
+        #cloud-config
+        disable_root: true
+        ssh_authorized_keys:
+          - {{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}
+        bootcmd:
+          - apt-get update
+          - dpkg --configure -a
+          - env TERM=linux DEBIAN_FRONTEND=noninteractive apt-get install -yq -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openssh-server
+          - dpkg --configure -a
+          - sleep 10s
+
+- name: Create an Ubuntu container for bbb
+  community.general.lxd_container:
+    name: bigbluebutton
+    state: started
+    architecture: x86_64
+    # config: # set on the profile under devices.eth1
+    #   volatile.eth1.hwaddr: "{{ container_mac }}"
+    #   volatile.eth1.name: eth1
+    source:
+      type: image
+      alias: ubuntu/bionic/amd64/cloud  # == ubuntu:18.04
+      mode: pull
+      protocol: lxd
+      server: https://images.linuxcontainers.org
+    profiles: ["default", "bigbluebutton"]
+    # wait_for_ipv4_addresses: true
+    timeout: 120
+
+- name: Create network config for the container
+  template:
+    src: 00-eth.network.jinja2
+    dest: /tmp/00-eth.network
+
+- name: Attach new network config to the container
+  command: lxc file push /tmp/00-eth.network bigbluebutton/etc/systemd/network/00-eth.network
+
+- name: Restart a container
+  community.general.lxd_container:
+    name: bigbluebutton
+    state: restarted

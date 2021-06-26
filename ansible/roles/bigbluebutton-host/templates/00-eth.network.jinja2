@@ -1,0 +1,12 @@
+[Match]
+MACAddress={{ container_mac }}
+
+[Network]
+Address={{ container_ip}}/32
+DNS=10.1.10.1
+DNS=8.8.8.8
+
+[Route]
+Gateway=0.0.0.0
+Scope=link
+Protocol=kernel
