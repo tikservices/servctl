@@ -168,3 +168,13 @@
     mode: '0644'
     directory_mode: '0755'
   tags: bbb
+
+- name: bbb - fix secret
+  ansible.builtin.command:
+    cmd: bbb-conf --setsecret "{{ bigbluebutton.secret }}"
+  tags: bbb
+
+- name: bbb - fix hostname
+  ansible.builtin.command:
+    cmd: bbb-conf --setip "{{ bigbluebutton.url | urlsplit('hostname') }}"
+  tags: bbb

@@ -27,7 +27,7 @@ def exec_deploy(c: ContextWithApp) -> None:
         try:
             db.postgres_enable_superuser(c, True)
             c.sh.sudo(
-                f"./.deploy {c.app.project.env.name}",
+                f"./.deploy {c.app.project.env.value}",
                 user="www-data",
                 cwd=c.app.project.src_dir,
                 env={"HOME": "/var/www"},

@@ -1,0 +1,20 @@
+- name: install ovh sdk
+  pip:
+    name: ovh
+  tags: ovh
+
+- name: Create server OVH DNS
+  ovh_dns:
+    state: present
+    domain: tik.website
+    name: "{{ inventory_hostname }}"
+    type: A
+    value: "{{ ansible_default_ipv4.address }}"
+    # replace: *
+    create: true
+  environment:
+    OVH_ENDPOINT: "{{ ovh.endpoint }}"
+    OVH_APPLICATION_KEY: "{{ ovh.application_key }}"
+    OVH_APPLICATION_SECRET: "{{ ovh.application_secret }}"
+    OVH_CONSUMER_KEY: "{{ ovh.consumer_key }}"
+  tags: ovh

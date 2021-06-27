@@ -1,21 +1,36 @@
 ---
+- name: pg config
+  set_fact:
+    pg_version: "{{ runtimes.postgres.version }}"
+    pg_cluster: main
+  tags: postgres
+
+- name: pg set datadir fact
+  set_fact:
+    pg_data_directory: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db/postgres/{{ pg_version }}/{{ pg_cluster }}/"
+    pg_conf_dir: "/etc/postgresql/{{ pg_version }}/{{ pg_cluster }}"
+  tags: postgres
+
+
 - name: Add key for Postgres repo
   apt_key:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     state: present
+  tags: postgres
 
 - name: Add Postgres repo to sources list
   apt_repository:
     repo: 'deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main'
     state: present
     update_cache: yes
+  tags: postgres
 
 - name: install postgresql
   package:
     name:
-      - postgresql  # TODO: postgresql-{13}
+      - "postgresql-{{ pg_version }}"
       - postgresql-server-dev-all
-      - postgresql-client
+      - "postgresql-client-{{ pg_version }}"
       - libpq-dev
       - libxslt-dev
       - libxml2-dev
@@ -28,6 +43,50 @@
     state: present
   tags: postgres
 
+- name: stop postgresql
+  ansible.builtin.service:
+    name: "postgresql@{{ pg_version }}-{{ pg_cluster }}.service"
+    state: stopped
+  tags: postgres
+
+- name: get current data dir
+  shell:
+    cmd:  awk -F "=" '/data_directory/ {print $2}' {{ pg_conf_dir }}/postgresql.conf | sed "s/^[ ]*'//; s/'[^']*$//"
+  register: pg_current_data_directory
+  tags: postgres
+
+- name: create postgres data dir
+  file:
+    path: "{{ pg_data_directory }}"
+    state: directory
+    mode: 0700
+    owner: postgres
+    group: postgres
+  tags: postgres
+
+- name: remove default pg cluster
+  command:
+    cmd: /usr/bin/pg_dropcluster {{ pg_version }} {{ pg_cluster }} --stop
+    removes: "/var/lib/postgresql/{{ pg_version}}/{{ pg_cluster }}/"
+  when: pg_current_data_directory.stdout != pg_data_directory
+  tags: postgres
+
+- name: create pg cluster
+  command:
+    cmd: /usr/bin/pg_createcluster -u postgres {{ pg_version }} {{ pg_cluster }} -d {{ pg_data_directory }}
+    creates: "{{ pg_data_directory}}/PG_VERSION"
+  tags: postgres
+
+- name: Change postgres data dir
+  community.general.ini_file:
+     path:  "{{ pg_conf_dir }}/postgresql.conf"
+     section: null
+     option: data_directory
+     value: "'{{ pg_data_directory }}'"
+     backup: yes
+     create: no
+  tags: postgres
+
 - name: Enable local socket auth with password/md5
   postgresql_pg_hba:
     dest: "{{ item }}"
@@ -36,16 +95,12 @@
     databases: all
     method: md5
   with_items:
-    - "/etc/postgresql/13/main/pg_hba.conf"
-    # - "/etc/postgresql/12/main/pg_hba.conf"
-    # - "/etc/postgresql/10/main/pg_hba.conf"
-    # - "/etc/postgresql/11/main/pg_hba.conf"
-    # - "/etc/postgresql/9.5/main/pg_hba.conf"
+    - "{{ pg_conf_dir }}/pg_hba.conf"
   tags: postgres
 
 - name: enable postgresql
   ansible.builtin.service:
-    name: postgresql
+    name: "postgresql@{{ pg_version }}-{{ pg_cluster }}.service"
     state: restarted
     enabled: true
   tags: postgres

@@ -5,18 +5,27 @@
     state: present
   vars:
     packages:
-      - php-cli
-      - php-mbstring
-      - php-opcache
-      - php-curl
-      - php-gd
-      - php-intl
-      - php-json
-      - php-mysql
-      - php-pgsql
-      - php-readline
-      - php-xml
-      - php-sqlite3
+      - "php{{ runtimes.php.version }}"
+      - "php{{ runtimes.php.version }}-cli"
+      - "php{{ runtimes.php.version }}-cgi"
+      - "php{{ runtimes.php.version }}-mbstring"
+      - "php{{ runtimes.php.version }}-opcache"
+      - "php{{ runtimes.php.version }}-curl"
+      - "php{{ runtimes.php.version }}-gd"
+      - "php{{ runtimes.php.version }}-dev"
+      - "php{{ runtimes.php.version }}-intl"
+      - "php{{ runtimes.php.version }}-json"
+      - "php{{ runtimes.php.version }}-mysql"
+      - "php{{ runtimes.php.version }}-imap"
+      - "php{{ runtimes.php.version }}-gmp"
+      - "php{{ runtimes.php.version }}-phpdbg"
+      - "php{{ runtimes.php.version }}-pgsql"
+      - "php{{ runtimes.php.version }}-readline"
+      - "php{{ runtimes.php.version }}-tidy"
+      - "php{{ runtimes.php.version }}-xml"
+      - "php{{ runtimes.php.version }}-xsl"
+      - "php{{ runtimes.php.version }}-sqlite3"
+      - "php{{ runtimes.php.version }}-zip"
   tags: php
 
 - name: setup php composer

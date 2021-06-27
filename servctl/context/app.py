@@ -68,12 +68,13 @@ class DB(BaseModel):
 
 
 DEFAULT_DJANGO_ADMIN_PATH = "admin"
+DEFAULT_DJANGO_PROJECT_MODULE = "project"
 
 
 class Django(BaseModel):
     secret: str
     admin_path: str = DEFAULT_DJANGO_ADMIN_PATH
-    project_module: str
+    project_module: str = DEFAULT_DJANGO_PROJECT_MODULE
 
 
 class QueueTypes(str, Enum):

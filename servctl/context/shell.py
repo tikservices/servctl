@@ -16,16 +16,25 @@ class Shell:
         env: Optional[dict[str, str]] = None,
         cwd: Optional[Union[str, Path]] = None,
     ) -> None:
-        cmd = self._build_cmd(cmd, cwd)
+        cmd = self._build_cmd(cmd, cwd=cwd, env=env)
         self.con.run(cmd, env=env)
 
     @staticmethod
     def _build_cmd(
         cmd: str,
         cwd: Optional[Union[str, Path]] = None,
+        env: Optional[dict[str, str]] = None,
     ) -> str:
+        if env:
+            params = shlex.join(
+                ["{}={}".format(k, v) for k, v in sorted(env.items())]
+            )
+            cmd = f"export {params} && {cmd}"
+
         if cwd:
-            cmd = f"cd {cwd} && {cmd}"
+            cd = shlex.join(['cd', str(cwd)])
+            cmd = f"{cd} && {cmd}"
+        if env or cmd:
             cmd = shlex.join(["bash", "-i", "-c", cmd])
         return cmd
 
@@ -38,7 +47,7 @@ class Shell:
         env: Optional[dict[str, str]] = None,
         cwd: Optional[Union[str, Path]] = None,
     ) -> bool:
-        cmd = self._build_cmd(cmd, cwd)
+        cmd = self._build_cmd(cmd, cwd=cwd, env=env)
         res = self.con.sudo(cmd, user=user, env=env, warn=warn, pty=pty)
         if warn:
             return bool(res.ok)
@@ -75,8 +84,8 @@ class Shell:
         cmd = f"rm -rf {p}"
         self.sudo(cmd)
 
-    def put(self, src_l: Union[Path, str], dst_r: Union[Path, str], use_sudo: bool = False) -> None:
-        self.con.put(str(src_l), str(dst_r), use_sudo=use_sudo)
+    def put(self, src_l: Union[Path, str], dst_r: Union[Path, str]) -> None:
+        self.con.put(str(src_l), str(dst_r))
 
     def get(self, src_r: Union[Path, str], dst_l: Union[Path, str], use_sudo: bool = False) -> None:
         Path(dst_l).parent.mkdir(parents=True, exist_ok=True)

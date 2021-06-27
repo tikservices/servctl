@@ -5,7 +5,8 @@
     state: present
   vars:
     packages:
-      - ruby-full
-      - ruby-dev
+      - "ruby{{ runtimes.ruby.version }}"
+      - "ruby{{ runtimes.ruby.version }}-dev"
+      - ri
       - ruby-bundler
   tags: ruby

@@ -2,7 +2,8 @@
 - name: install mysql
   package:
     name:
-      - mysql-server
+      - "mysql-server-{{ runtimes.mysql.version }}"
+      - "mysql-client-{{ runtimes.mysql.version }}"
       - libmysqlclient-dev
     state: present
   tags: mysql
@@ -15,10 +16,62 @@
     state: present
   tags: mysql
 
+
+- name: set mysql datadir
+  set_fact:
+    mysql_datadir: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db/mysql"
+  tags: mysql
+
+- name: create mysql datadir
+  file:
+    path: "{{ mysql_datadir }}"
+    state: directory
+    mode: 0750
+    owner: mysql
+    group: mysql
+  tags: mysql
+
+- name: stop mysql
+  ansible.builtin.service:
+    name: mysql
+    state: stopped
+  tags: mysql
+
+- name: update mysqld apparmor attrs
+  lineinfile:
+    path: /etc/apparmor.d/usr.sbin.mysqld
+    line: |
+      {{ mysql_datadir }}/ r,
+      {{ mysql_datadir }}/** rwk,
+    insertafter: "# Allow data dir access"
+  tags: mysql
+
+- name: restart apparmor
+  ansible.builtin.service:
+    name: apparmor
+    state: restarted
+  tags: mysql
+
+- name: Change mysql datadir path
+  community.general.ini_file:
+     path: /etc/mysql/mysql.conf.d/mysqld.cnf
+     section: mysqld
+     option: datadir
+     value: "{{ mysql_datadir }}/"
+     backup: yes
+     create: no
+  tags: mysql
+
+- name: init mysql datadir
+  command:
+    cmd: "mysqld --user=mysql --initialize-insecure --datadir={{ mysql_datadir }}"
+    creates: "{{ mysql_datadir }}/auto.cnf"
+  tags: mysql
+
 - name: enable mysql
   ansible.builtin.service:
     name: mysql
-    state: started
+    state: restarted
     enabled: true
   tags: mysql
 

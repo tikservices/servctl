@@ -12,10 +12,11 @@ DJANGO_ADMINS="{{ conf.webmaster.full_name }} <{{ conf.webmaster.email }}>"
 DJANGO_ADMIN_PATH='{{ app.django.admin_path }}'
 DJANGO_PUBLIC_ADMIN_PATH='{{ app.django.admin_path }}'
 
-VAR_DIR={{app.project.var_slink}}
-WWW_DIR={{app.project.www_dir}}
-TMP_DIR={{app.project.tmp_dir}}
-SRC_DIR={{app.project.src_dir}}
+APP_VAR_DIR={{app.project.var_slink}}
+APP_WWW_DIR={{app.project.www_dir}}
+APP_TMP_DIR={{app.project.tmp_dir}}
+APP_SRC_DIR={{app.project.src_dir}}
+APP_ETC_DIR={{app.project.etc_dir}}
 
 {% if driver == 'sqlite' %}
 DATABASE_URL=sqlite:///{{app.project.var_dir}}/db.sqlite3

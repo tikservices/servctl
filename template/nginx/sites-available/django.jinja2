@@ -44,7 +44,7 @@ server {
 		include proxy_params;
 
 		proxy_redirect off;
-		proxy_pass http://tik-crm-saas-api-django;
+		proxy_pass http://{{ app.project.name }}-django;
 	}
 	{% endif %}
 

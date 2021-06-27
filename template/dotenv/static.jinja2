@@ -1,5 +1,10 @@
 # vim: set filetype=dosini:
 
+APP_VAR_DIR={{app.project.var_slink}}
+APP_WWW_DIR={{app.project.www_dir}}
+APP_TMP_DIR={{app.project.tmp_dir}}
+APP_SRC_DIR={{app.project.src_dir}}
+
 API_BASE_URL_DEV=http://localhost:8000
 API_BASE_URL=
 MAINTENANCE_MODE=
@@ -9,7 +14,7 @@ MAINTENANCE_TOKEN=earlyaccess
 DEFAULT_CURRENCY=TND
 PAYMENT_PROVIDERS=smt,coupon,wiretransfer
 CACHE_PREFIX=tikcache
-BASE_URL=
+BASE_URL='https://{{ app.domain }}/'
 EMAIL=
 DISPLAY_NAME=
 SHORT_NAME=

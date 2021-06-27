@@ -5,6 +5,7 @@
     - ../config.yaml
   roles:
     - common
+    - ovh
     - security
     - backup
     # - monitoring  # FIXME

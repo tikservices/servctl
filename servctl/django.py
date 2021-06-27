@@ -46,13 +46,13 @@ pipenv run python /tmp/django-createsuperuser.py \
 
 @register(name="uwsgi:setup")
 def setup_uwsgi(ctxt: Context) -> None:
-    ctxt.sh.put("./uwsgi", "/etc", use_sudo=True)
+    ctxt.sh.upload("./uwsgi", "/etc")
     ctxt.sh.systemd("restart", "uwsgi")
 
 
 @register(name="supervisor:setup")
 def sync_supervisor(ctxt: Context) -> None:
-    ctxt.sh.put("./supervisor", "/etc", use_sudo=True)
+    ctxt.sh.upload("./supervisor", "/etc")
     ctxt.sh.sudo("supervisorctl update")
 
 

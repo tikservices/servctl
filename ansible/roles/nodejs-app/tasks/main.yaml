@@ -3,7 +3,7 @@
   include_role:
     name: geerlingguy.nodejs
   vars:
-    nodejs_version: "14.x"
+    nodejs_version: "{{ runtimes.nodejs.version }}.x"
     # nodejs_npm_global_packages:
     #   - name: yarn
 

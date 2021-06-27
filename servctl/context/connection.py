@@ -27,7 +27,7 @@ class Connection(fabric.connection.Connection):  # type: ignore
         f_config = fabric.config.Config(overrides=o_config, lazy=False)
         f_config.load_runtime()
         # con.config.load_ssh_config()
-        con = cls(host, config=f_config)
+        con = cls(host, config=f_config, inline_ssh_env=True)
         return con
 
     @classmethod
