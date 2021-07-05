@@ -2,7 +2,6 @@
 server {
 	index index.html index.htm;
 
-	server_name {{ app.domain }};
 	{% for domain in app.domains -%}
 	server_name {{ domain }};
 	{% endfor %}
@@ -58,7 +57,6 @@ server {
 }
 
 server {
-	server_name www.{{ app.domain }};
 	{% for domain in app.domains -%}
 	{% if not domain.startswith('*') -%}
 	server_name www.{{ domain }};

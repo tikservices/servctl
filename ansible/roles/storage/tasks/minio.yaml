@@ -128,7 +128,7 @@
 
 
 - name: generate minio server certbot
-  command: certbot certonly --nginx -d {{ minio_hostname }} --cert-name minio --agree-tos --email {{ sysadmin.email }}
+  command: certbot certonly --nginx -d {{ minio_hostname }} --cert-name minio --agree-tos --email {{ sysadmin.email }} -n
   tags: minio
 
 - name: reconfig minio nginx configs with cert

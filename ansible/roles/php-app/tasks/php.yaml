@@ -26,6 +26,7 @@
       - "php{{ runtimes.php.version }}-xsl"
       - "php{{ runtimes.php.version }}-sqlite3"
       - "php{{ runtimes.php.version }}-zip"
+      - php-redis
   tags: php
 
 - name: setup php composer

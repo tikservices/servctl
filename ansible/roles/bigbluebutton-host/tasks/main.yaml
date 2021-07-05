@@ -84,7 +84,11 @@
 - name: Attach new network config to the container
   command: lxc file push /tmp/00-eth.network bigbluebutton/etc/systemd/network/00-eth.network
 
-- name: Restart a container
+- name: Restart bbb container
   community.general.lxd_container:
     name: bigbluebutton
     state: restarted
+
+- name: Wait for bbb contaner restarted
+  pause:
+    minutes: 2

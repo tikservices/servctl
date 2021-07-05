@@ -68,6 +68,24 @@
     creates: "{{ mysql_datadir }}/auto.cnf"
   tags: mysql
 
+- name: Enable Local file load for mysql - mysqld.conf
+  community.general.ini_file:
+     path: /etc/mysql/mysql.conf.d/mysqld.cnf
+     section: mysqld
+     option: local-infile
+     value: 1
+     create: no
+  tags: mysql
+
+- name: Enable Local file load for mysql - mysql.conf
+  community.general.ini_file:
+     path: /etc/mysql/mysql.conf.d/mysql.cnf
+     section: mysql
+     option: local-infile
+     value: 1
+     create: no
+  tags: mysql
+
 - name: enable mysql
   ansible.builtin.service:
     name: mysql

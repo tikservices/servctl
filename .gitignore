@@ -6,3 +6,4 @@ ovh.ini
 /ansible/inventory/
 /zones/
 /secrets/
+/backups/

@@ -44,16 +44,14 @@ def generate(ctxt: ContextWithApp) -> None:
         log("[UWSGI/Generate]")
         uwsgi.generate(ctxt, template=app.project.type.name)
     if app.project.type == ProjectTypes.DJANGO:
-        # log("[Django/Generate_Settings_Secrets]")
-        # django.generate_settings_secrets(ctxt)
-        pass
+        log("[Django/Generate_Settings_Secrets]")
+        django.generate_settings_secrets(ctxt)
     log("[Dotenv/Generate]")
     dotenv.generate(ctxt)
 
 
 @register(name="app:deploy")
 def deploy(ctxt: ContextWithApp, force_dns: bool = False) -> None:
-    # ctxt = ContextWithApp.from_app_config(config_file, ctxt_)
     app = ctxt.app
 
     log(f"deploying into: {app.project.host}")
@@ -71,8 +69,9 @@ def deploy(ctxt: ContextWithApp, force_dns: bool = False) -> None:
     git.clone(ctxt)
     log("[Dotenv/Sync]")
     dotenv.deploy(ctxt)
-    # log("[Django/Sync_Settings_Secrets]")
-    # django.sync_settings_secrets(ctxt)
+    if app.project.type == ProjectTypes.DJANGO:
+        log("[Django/Sync_Settings_Secrets]")
+        django.sync_settings_secrets(ctxt)
     log("[DNS/Register_Domains]")
     domains = dns.get_domains(ctxt)
     dns.register_domains(ctxt, force_dns, *domains)
@@ -93,10 +92,9 @@ def deploy(ctxt: ContextWithApp, force_dns: bool = False) -> None:
         log("[Django/CreateSuperUser]")
         django.createsuperuser(ctxt)
     log("[Git/CreatePushWebhook]")
-    git.create_push_webhook(ctxt)
     # TODO: register webhook to github_update.php or deploy script?
+    git.create_push_webhook(ctxt)
     # TODO: generate social media tokens
-    # TODO: create superuser
     # log("[Webmaster/Ping_Sitemap]")
     # webmaster.ping_sitemap(ctxt)
 
@@ -107,5 +105,5 @@ def backup(ctxt: ContextWithApp, name: Optional[str] = None) -> None:
 
 
 @register(name="app:restore")
-def restore(ctxt: ContextWithApp, config_file: Path, name: str) -> None:
+def restore(ctxt: ContextWithApp, name: str) -> None:
     backup_m.restore(ctxt, name)

@@ -8,7 +8,6 @@ upstream {{ app.project.name }}-django {
 }
 
 server {
-	server_name {{ app.domain }};
 	{% for domain in app.domains -%}
 	server_name {{ domain }};
 	{% endfor %}
@@ -23,7 +22,15 @@ server {
 
 	location / {
 		index index.html index.htm;
-		try_files $uri $uri.html $uri/ @django;
+		try_files $uri $uri.html $uri/index.html @django;
+		sendfile           on;
+		include /etc/nginx/conf.server.d/common-headers.conf;
+		expires $expires_max;
+	}
+
+	location /upload/ {
+	root {{ app.project.var_dir }}/;
+		try_files $uri =404;
 		sendfile           on;
 		include /etc/nginx/conf.server.d/common-headers.conf;
 		expires $expires_max;
@@ -47,16 +54,6 @@ server {
 		proxy_pass http://{{ app.project.name }}-django;
 	}
 	{% endif %}
-
-	location /static/ {
-		include /etc/nginx/conf.server.d/common-headers.conf;
-		expires $expires_max;
-	}
-
-	location /upload/ {
-		include /etc/nginx/conf.server.d/common-headers.conf;
-		expires $expires_max;
-	}
 
 	{% if app.django.admin_path != 'admin' %}
 	location /admin/ {
@@ -89,7 +86,6 @@ server {
 }
 
 server {
-	server_name www.{{ app.domain }};
 	{% for domain in app.domains -%}
 	{% if not domain.startswith('*') -%}
 	server_name www.{{ domain }};

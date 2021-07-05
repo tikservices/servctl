@@ -36,6 +36,8 @@
       - software-properties-common
       - rsync
       - python3-apt
+      - silversearcher-ag
+      - vifm
 
 - name: create Systemd directories
   file:

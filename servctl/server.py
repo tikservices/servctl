@@ -15,7 +15,7 @@ def create_projects_dirs(c: ContextWithApp) -> None:
         c.sh.rm(c.app.project.www_dir)
         c.sh.ln(pub, c.app.project.www_dir, force=True)
     else:
-        c.sh.mkdir(c.app.project.www_dir, owner="www-data", mode=0o550)
+        c.sh.mkdir(c.app.project.www_dir, owner="www-data", mode=0o750)
 
     c.sh.mkdir(c.app.project.data_dir, owner="www-data", mode=0o750)
     c.sh.ln(c.app.project.data_dir, c.app.project.var_slink, force=True)
@@ -34,6 +34,25 @@ def exec_deploy(c: ContextWithApp) -> None:
             )
         finally:
             db.postgres_enable_superuser(c, False)
+
+
+def get_server_default_interface(c: Context) -> dict:
+    # code based on ansible get_default_interfaces()
+    # from ansible module_utils/facts/network/linux.py
+    res = c.sh._sudo("ip -4 route get 8.8.8.8")
+    out: str = res.stdout
+    words = out.splitlines()[0].split()
+    interface = {}
+    # A valid output starts with the queried address on the first line
+    if len(words) > 0 and words[0] == "8.8.8.8":
+        for i in range(len(words) - 1):
+            if words[i] == 'dev':
+                interface['interface'] = words[i + 1]
+            elif words[i] == 'src':
+                interface['address'] = words[i + 1]
+            elif words[i] == 'via' and words[i + 1] != "8.8.8.8":
+                interface['gateway'] = words[i + 1]
+    return interface
 
 
 @register(name="server:update")

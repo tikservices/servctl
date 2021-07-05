@@ -73,6 +73,7 @@ DEFAULT_DJANGO_PROJECT_MODULE = "project"
 
 class Django(BaseModel):
     secret: str
+    secret_settings: bool = False
     admin_path: str = DEFAULT_DJANGO_ADMIN_PATH
     project_module: str = DEFAULT_DJANGO_PROJECT_MODULE
 
@@ -119,8 +120,8 @@ class Project(BaseModel):
             return self.public_dir.resolve()
         elif self.public_dir:  # relative to absolute
             return (Path("/") / self.public_dir).resolve()
-        elif self.type == ProjectTypes.STATIC:
-            return Path("/")
+        # elif self.type == ProjectTypes.STATIC:
+        #     return Path("/")
         return None
 
     @property
@@ -160,6 +161,10 @@ class Project(BaseModel):
             return conf_m.DEFAULT_SERVER_APPS_DATA_DIR / self.name
 
     @property
+    def var_dir(self) -> Path:
+        return self.data_dir
+
+    @property
     def var_slink(self) -> Path:
         return self.app_dir / "var/"
 
@@ -177,7 +182,7 @@ class App(BaseModel):
     project: Project
     repo: Repo
     domains: Domains
-    db: Union[DB, Literal[False]]
+    db: Optional[Union[DB, Literal[False]]]
     django: Optional[Django]
     queue: Union[QueueTypes, None, Literal[False]]
     wsgi: Optional[WSGI]

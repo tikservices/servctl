@@ -2,6 +2,7 @@ from .app import App
 from pathlib import Path
 from typing import Literal, Optional, Union
 from fabric.connection import Connection
+import invoke.runners
 from patchwork.files import exists
 import shlex
 
@@ -15,9 +16,10 @@ class Shell:
         cmd: str,
         env: Optional[dict[str, str]] = None,
         cwd: Optional[Union[str, Path]] = None,
+        pty: bool = False,
     ) -> None:
         cmd = self._build_cmd(cmd, cwd=cwd, env=env)
-        self.con.run(cmd, env=env)
+        self.con.run(cmd, env=env, pty=pty)
 
     @staticmethod
     def _build_cmd(
@@ -34,7 +36,7 @@ class Shell:
         if cwd:
             cd = shlex.join(['cd', str(cwd)])
             cmd = f"{cd} && {cmd}"
-        if env or cmd:
+        if env or cwd:
             cmd = shlex.join(["bash", "-i", "-c", cmd])
         return cmd
 
@@ -47,17 +49,28 @@ class Shell:
         env: Optional[dict[str, str]] = None,
         cwd: Optional[Union[str, Path]] = None,
     ) -> bool:
-        cmd = self._build_cmd(cmd, cwd=cwd, env=env)
-        res = self.con.sudo(cmd, user=user, env=env, warn=warn, pty=pty)
+        res = self._sudo(cmd, user=user, warn=warn, pty=pty, env=env, cwd=cwd)
         if warn:
             return bool(res.ok)
         else:
             return True
 
+    def _sudo(
+        self,
+        cmd: str,
+        user: Optional[str] = None,
+        warn: bool = False,
+        pty: bool = False,
+        env: Optional[dict[str, str]] = None,
+        cwd: Optional[Union[str, Path]] = None,
+    ) -> invoke.runners.Result:
+        cmd = self._build_cmd(cmd, cwd=cwd, env=env)
+        return self.con.sudo(cmd, user=user, env=env, warn=warn, pty=pty)
+
     def ln(
         self, src: Union[Path, str], dst: Union[Path, str], force: bool = False
     ) -> None:
-        cmd = f"ln -s {src} {dst}"
+        cmd = f"ln -s --no-dereference {src} {dst}"
         if force:
             cmd += " -f"
         self.sudo(cmd)
