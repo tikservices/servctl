@@ -1,16 +1,19 @@
 # vim: ft=yaml
 dirs:
   local:
-    # Local directory to store app config
+    # Local directory to store app config. PRIVATE DATA
     apps: apps
     # local directory where templates are stores
     template: template
-    # local directory where to store backups
+    # local directory where to store backups. PRIVATE DATA
     backups: backups
+    # local directory to store passwords and other secrets generated/used by ansible. PRIVATE DATA
+    secrets: secrets
   server:
     # Remote abslute path where to deploy apps
     apps: "/apps/"
     apps_data: "/data/apps/"
+    data: "/data/"
 
 github:
   # access tokento Github API
@@ -28,12 +31,32 @@ db:
     # postgresql password for root user
     root_password:
 
+storage:
+  minio:
+    root_password:
+    root_user:
+    url:
+
+backup:
+  - type: drive
+    client_id: ""
+    client_secret: ""
+    token: ""
+  - type: ftp
+    host: ""
+    user: ""
+    pass: ""
+  - type: local
+    dest: /
+
+
 # OVH API access keys to create dns records and email forwading
 ovh:
   endpoint: ovh-eu
   application_key:
   application_secret:
   consumer_key:
+  default_zone:
 
 django:
   superuser:
@@ -43,6 +66,10 @@ django:
     email:
     # plain text password to use for the superuser created by the script
     password:
+
+bigbluebutton:
+  url:
+  secret:
 
 # Webmaster of web apps
 webmaster:
@@ -59,6 +86,7 @@ sysadmin:
   username:
   password:
   full_name:
+  email:
 
 ssh:
   # ssh private key passphrase, or you can use SSH Agent
@@ -74,4 +102,7 @@ shell:
    pty: False
    warn: False
    shell: "/bin/bash"
+   replace_env: True
+   timeout: 60  #secs
+
    env: {}
