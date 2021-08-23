@@ -1,0 +1,30 @@
+[all:vars]
+ansible_python_interpreter=/usr/bin/env python3
+ansible_user=
+ansible_sudo_pass=
+ansible_pass=
+# ansible_port=110
+
+[bootstrap]
+server1 ansible_host=8.8.8.8
+
+[bootstrap:vars]
+ansible_port=22
+ansible_user=ubuntu
+ansible_sudo_pass=
+ansible_pass=
+
+[web]
+web1 ansible_host=8.8.8.8
+
+[databases]
+db1 ansible_host=8.8.8.8
+
+[lms]
+lms1 ansible_host=8.8.8.8
+
+[visio]
+visio1 ansible_host=8.8.8.8
+
+[visio-host]
+server2 ansible_host=8.8.8.8
