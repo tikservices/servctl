@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 fabric = "*"
 patchwork = "*"
-ovh = "*"
+ovh = {git = "https://github.com/lalmeras/python-ovh",editable = true,ref = "fix-python-3.10-requests"}
 PyGithub = "*"
 invoke = "*"
 invocations = "*"

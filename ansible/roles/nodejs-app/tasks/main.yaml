@@ -9,4 +9,4 @@
 
 - name: setup nodejs yarn
   include_role:
-    name: Oefenweb.yarn
+    name: oefenweb.yarn

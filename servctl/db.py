@@ -91,15 +91,17 @@ def shell(ctxt: Context, app: Optional[App] = None, driver: Optional[str] = None
         driver = app.db.driver
     else:
         name = ""
-        user = "root"
         driver = driver if driver else "postgres"
         if driver == "mysql":
             assert config.db.mysql, "MySQL Config not defined on fabric.yaml"
+            user = "root"
             password = config.db.mysql.root_password
         elif driver == "postgres":
             assert config.db.postgres, "PostgreSQL Config not defined on fabric.yaml"
+            user = "postgres"
             password = config.db.postgres.root_password
         else:
+            user = ""
             password = ""
     if driver == "mysql":
         ctxt.sh.run(
@@ -107,7 +109,8 @@ def shell(ctxt: Context, app: Optional[App] = None, driver: Optional[str] = None
 mysql -hlocalhost -u {user} -p{password} -S /var/run/mysqld/mysqld.sock {name}
 """.format(
                 name=name, user=user, password=password
-            )
+            ),
+            pty=True,
         )
     elif driver == "postgres":
         ctxt.sh.sudo(

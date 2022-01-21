@@ -102,7 +102,7 @@ class Shell:
 
     def get(self, src_r: Union[Path, str], dst_l: Union[Path, str], use_sudo: bool = False) -> None:
         Path(dst_l).parent.mkdir(parents=True, exist_ok=True)
-        self.con.get(str(src_r), str(dst_l), use_sudo=use_sudo)
+        self.con.get(str(src_r), str(dst_l))  # FIXME, use_sudo=use_sudo)
 
     def chown(
         self, dst_r: Union[Path, str], owner: str, group: Optional[str] = None

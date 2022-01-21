@@ -69,6 +69,7 @@ def shell(ctxt: ContextWithApp) -> None:
         "pipenv run python manage.py shell",
         user="www-data",
         cwd=app.project.src_dir,
+        pty=True,
         env={
             "DJANGO_SETTINGS_MODULE": f"{app.django.project_module}.settings",
             "PYTHONPATH": str(app.project.src_dir),

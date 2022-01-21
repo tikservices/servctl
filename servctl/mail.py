@@ -45,7 +45,7 @@ def register_email_alias(conf: Config, **alias: Union[str, list[str]]) -> None:
 @register(name="email:alias")
 def email_alias(config: Config, alias_f: Union[Path, str] = "emails.yaml") -> None:
     with Path(alias_f).open() as f:
-        emails_c = yaml.load(f.read())
+        emails_c = yaml.safe_load(f.read())
     for domain, emails in emails_c.items():
         print("Generating for:", domain)
         if not emails:
