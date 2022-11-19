@@ -7,3 +7,8 @@ ovh.ini
 /zones/
 /secrets/
 /backups/
+/aliases/
+/zones
+/secrets
+/apps
+/aliases

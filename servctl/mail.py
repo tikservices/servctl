@@ -1,7 +1,7 @@
 from pathlib import Path
 from .commands import register
 from .context.config import Config
-from typing import Union
+from typing import Union, Optional
 from logging import warning
 import ovh
 import json
@@ -53,3 +53,27 @@ def email_alias(config: Config, alias_f: Union[Path, str] = "emails.yaml") -> No
         emails = {f"{username}@{domain}": alias for username, alias in emails.items()}
         register_email_alias(config, **emails)
         export_zone(config, domain)
+
+
+@register(name="email:aliases")
+def register_aliases(config: Config, alias_f: Optional[Union[Path, str]] = None) -> None:
+    if alias_f:
+        register_alias(config, Path(alias_f))
+    else:
+        aliases_d = Path("aliases/")
+        assert aliases_d.is_dir(), "aliases/ folder should exists and contains aliases files"
+        aliases_f = [f for f in aliases_d.iterdir() if f.is_file()]
+        for alias_f in aliases_f:
+            register_alias(config, alias_f)
+
+
+def register_alias(config: Config, alias_f: Path) -> None:
+    with alias_f.open() as f:
+        emails = yaml.safe_load(f.read())
+    domain = alias_f.name
+    print("Generating for:", domain)
+    if not emails:
+        return
+    emails = {f"{username}@{domain}": alias for username, alias in emails.items()}
+    register_email_alias(config, **emails)
+    export_zone(config, domain)
