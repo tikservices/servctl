@@ -3,7 +3,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    mode: '0750'
+    mode: '0751'
   with_items:
     - /var/www/
     - "{{ dirs.server.apps }}"

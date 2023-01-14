@@ -7,6 +7,7 @@
 
 - name: pg set datadir fact
   set_fact:
+    db_datadir: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db"
     pg_data_directory: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db/postgres/{{ pg_version }}/{{ pg_cluster }}/"
     pg_conf_dir: "/etc/postgresql/{{ pg_version }}/{{ pg_cluster }}"
   tags: postgres
@@ -53,6 +54,15 @@
   shell:
     cmd:  awk -F "=" '/data_directory/ {print $2}' {{ pg_conf_dir }}/postgresql.conf | sed "s/^[ ]*'//; s/'[^']*$//"
   register: pg_current_data_directory
+  tags: postgres
+
+- name: create db datadir
+  file:
+    path: "{{ db_datadir }}"
+    state: directory
+    mode: 0753
+    owner: root
+    group: root
   tags: postgres
 
 - name: create postgres data dir

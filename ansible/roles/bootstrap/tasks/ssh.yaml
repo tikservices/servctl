@@ -3,7 +3,7 @@
   authorized_key:
     user: "{{ sysadmin.username }}"
     state: present
-    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+    key: "{{ ssh.certificate_path + '.pub' | default(lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub')) }}"
   tags: ssh
 
 - name: config sshd

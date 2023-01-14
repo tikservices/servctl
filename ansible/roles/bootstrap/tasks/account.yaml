@@ -1,8 +1,7 @@
 ---
 - name: add user group
   group:
-    # gid: 113
-    name: admin
+    name: "{{ sysadmin.username }}"
     state: present
 - name: add admin user
   user:
@@ -10,7 +9,7 @@
     password: "{{ sysadmin.password  | password_hash('sha512') }}"
     comment: System Administrator
     shell: /bin/bash
-    group: admin
+    group: "{{ sysadmin.username }}"
     update_password: on_create
     state: present
 
@@ -18,10 +17,17 @@
     ssh_key_type: ed25519
     ssh_key_passphrase: "{{ ssh.passphrase }}"
 
-- name: add admin user to www-data group
+- name: add admin group
+  group:
+    # gid: 113
+    name: admin
+    state: present
+
+- name: add admin user to groups
   user:
     name: "{{ sysadmin.username }}"
     groups:
+      - admin
       - www-data
     append: yes
 

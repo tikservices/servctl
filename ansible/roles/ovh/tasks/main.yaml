@@ -1,3 +1,4 @@
+- include: ../../python-app/tasks/python.yaml
 - name: install ovh sdk
   pip:
     name: ovh

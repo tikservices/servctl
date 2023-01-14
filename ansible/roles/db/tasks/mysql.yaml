@@ -19,7 +19,17 @@
 
 - name: set mysql datadir
   set_fact:
+    db_datadir: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db"
     mysql_datadir: "{{ dirs.server.data | regex_replace('\\/$', '') }}/db/mysql"
+  tags: mysql
+
+- name: create db datadir
+  file:
+    path: "{{ db_datadir }}"
+    state: directory
+    mode: 0753
+    owner: root
+    group: root
   tags: mysql
 
 - name: create mysql datadir

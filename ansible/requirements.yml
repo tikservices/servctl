@@ -3,9 +3,9 @@ roles:
   - src: geerlingguy.nodejs
   - src: geerlingguy.docker
   - src: geerlingguy.composer
-  - src: ebbba.bigbluebutton
   - src: oefenweb.yarn
   - src: datadog.datadog
+  - src: ebbba.bigbluebutton
 
 collections:
   - name: community.general
